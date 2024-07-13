@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "contact.h"
+
 char* create_wrapped_title(const char* title, int width, char symbol);
 char get_action_choice();
 
