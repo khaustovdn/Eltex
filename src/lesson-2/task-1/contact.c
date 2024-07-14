@@ -12,8 +12,7 @@ contact_fill_property(Variable* property)
   printf("Input %s: ", property->name);
 
   int i = 0;
-  while ((property->value[i] = fgetc(stdin)) != '\n' &&
-         i < MAX_LEN) {
+  while ((property->value[i] = fgetc(stdin)) != '\n' && i < MAX_LEN) {
     i++;
   }
 
@@ -45,52 +44,36 @@ variable_construct(const char* name)
   return var;
 }
 
-#define DECLARE_VARIABLE(member_name)                      \
-  variable_construct(#member_name)
+#define DECLARE_VARIABLE(member_name) variable_construct(#member_name)
 
 void
 contact_construct(Contact* contact)
 {
   contact->id = 0;
-  contact_fill_property(
-    DECLARE_VARIABLE(contact->initials.surname));
-  contact_fill_property(
-    DECLARE_VARIABLE(contact->initials.name));
+  contact_fill_property(DECLARE_VARIABLE(contact->initials.surname));
+  contact_fill_property(DECLARE_VARIABLE(contact->initials.name));
 
-  char* action_choice =
-    (char*)malloc(MAX_LEN * sizeof(char));
+  char* action_choice = (char*)malloc(MAX_LEN * sizeof(char));
   if (action_choice == NULL) {
     fprintf(stderr, "Error: Memory allocation failed.\n");
     exit(EXIT_FAILURE);
   }
 
   CommandEntry commands[] = {
-    { "ip",
-      DECLARE_VARIABLE(&contact->initials.patronymic) },
+    { "ip", DECLARE_VARIABLE(&contact->initials.patronymic) },
     { "jt", DECLARE_VARIABLE(&contact->job_title) },
     { "pow", DECLARE_VARIABLE(&contact->place_of_work) },
-    { "mpn",
-      DECLARE_VARIABLE(&contact->phone_number.mobile) },
-    { "hpn",
-      DECLARE_VARIABLE(&contact->phone_number.home) },
-    { "wpn",
-      DECLARE_VARIABLE(&contact->phone_number.work) },
+    { "mpn", DECLARE_VARIABLE(&contact->phone_number.mobile) },
+    { "hpn", DECLARE_VARIABLE(&contact->phone_number.home) },
+    { "wpn", DECLARE_VARIABLE(&contact->phone_number.work) },
     { "ea", DECLARE_VARIABLE(&contact->email_address) },
-    { "vksn",
-      DECLARE_VARIABLE(
-        &contact->social_network.vkontakte) },
-    { "ytsn",
-      DECLARE_VARIABLE(&contact->social_network.youtube) },
-    { "tgsn",
-      DECLARE_VARIABLE(&contact->social_network.telegram) },
-    {
-      NULL,
-    }
+    { "vksn", DECLARE_VARIABLE(&contact->social_network.vkontakte) },
+    { "ytsn", DECLARE_VARIABLE(&contact->social_network.youtube) },
+    { "tgsn", DECLARE_VARIABLE(&contact->social_network.telegram) },
+    { NULL, NULL }
   };
 
-  while (
-    strcmp(strncpy(action_choice, contact_menu(), MAX_LEN),
-           "q") != 0) {
+  while (strcmp(strncpy(action_choice, contact_menu(), MAX_LEN), "q") != 0) {
     int i = 0;
     while (commands[i].name != NULL) {
       if (strcmp(action_choice, commands[i].name) == 0) {
@@ -119,16 +102,14 @@ contact_menu()
         "YouTube Social Network\n\ttgsn. Telegram "
         "Social Network\n\tq. Quit\nInput: ",
         stdout);
-  char* action_choice =
-    (char*)malloc(MAX_LEN * sizeof(char));
+  char* action_choice = (char*)malloc(MAX_LEN * sizeof(char));
   if (action_choice == NULL) {
     fprintf(stderr, "Error: Memory allocation failed.\n");
     exit(EXIT_FAILURE);
   }
 
   int i = 0;
-  while ((action_choice[i] = fgetc(stdin)) != '\n' &&
-         i < MAX_LEN) {
+  while ((action_choice[i] = fgetc(stdin)) != '\n' && i < MAX_LEN) {
     i++;
   }
 
