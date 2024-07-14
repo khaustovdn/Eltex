@@ -1,43 +1,44 @@
 #ifndef CONTACT_H_
 #define CONTACT_H_
 
+#define MAX_LEN 256
+
 typedef struct
 {
-  char* surname;
-  char* name;
-  char* patronymic;
+  char surname[MAX_LEN];
+  char name[MAX_LEN];
+  char patronymic[MAX_LEN];
 } Initials;
 
 typedef struct
 {
-  char* mobile;
-  char* home;
-  char* work;
+  char mobile[MAX_LEN];
+  char home[MAX_LEN];
+  char work[MAX_LEN];
 } PhoneNumber;
 
 typedef struct
 {
-  char* vkontakte;
-  char* google;
-  char* telegram;
+  char vkontakte[MAX_LEN];
+  char youtube[MAX_LEN];
+  char telegram[MAX_LEN];
 } SocialNetworks;
 
 typedef struct
 {
   Initials initials;
-  char* job_title;
-  char* place_of_work;
+  char job_title[MAX_LEN];
+  char place_of_work[MAX_LEN];
   PhoneNumber phone_number;
-  char* email_address;
+  char email_address[MAX_LEN];
   SocialNetworks social_networks;
 } Contact;
 
-static void
-contact_init(Contact* contact);
+void
+contact_construct(Contact* contact);
 
 void
-contact_set_property(Contact* contact,
-                     const char* property_name,
-                     const char* value);
+contact_fill_property(char* property,
+                      const char* property_name);
 
 #endif // CONTACT_H_

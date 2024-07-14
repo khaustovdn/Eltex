@@ -5,11 +5,18 @@
 
 #include "contact.h"
 
-char* create_wrapped_title(const char* title, int width, char symbol);
-char get_action_choice();
+char*
+create_wrapped_title(const char* title,
+                     int width,
+                     char symbol);
+char
+get_action_choice();
 
-int main(int argc, char* argv[]) {
-  char* wrapped_title = create_wrapped_title("Contacts", 30, '-');
+int
+main(int argc, char* argv[])
+{
+  char* wrapped_title =
+    create_wrapped_title("Contacts", 30, '-');
   if (wrapped_title == NULL) {
     return EXIT_FAILURE;
   }
@@ -22,6 +29,7 @@ int main(int argc, char* argv[]) {
       case 'a':
         puts("Append contact action chosen");
         Contact contact;
+        contact_construct(&contact);
         break;
       case 'e':
         puts("Edit contact info action chosen");
@@ -39,9 +47,14 @@ int main(int argc, char* argv[]) {
   return EXIT_SUCCESS;
 }
 
-char* create_wrapped_title(const char* title, int width, char symbol) {
+char*
+create_wrapped_title(const char* title,
+                     int width,
+                     char symbol)
+{
   if (width < strlen(title)) {
-    fputs("Error: Width is too small for the title", stdout);
+    fputs("Error: Width is too small for the title",
+          stdout);
     return NULL;
   }
   size_t wrap_width = (width - strlen(title)) >> 1;
@@ -61,9 +74,14 @@ char* create_wrapped_title(const char* title, int width, char symbol) {
   return result;
 }
 
-char get_action_choice() {
+char
+get_action_choice()
+{
   char action_choice;
-  fputs("Choose an action:\n\ta. Append contact\n\te. Edit contact info\n\tr. Remove contact\n\tq. Quit\nInput: ", stdout);
+  fputs("Choose an action:\n\ta. Append "
+        "contact\n\te. Edit contact info\n\tr. "
+        "Remove contact\n\tq. Quit\nInput: ",
+        stdout);
   action_choice = fgetc(stdin);
   while (fgetc(stdin) != '\n')
     ;
