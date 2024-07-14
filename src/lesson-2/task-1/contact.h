@@ -26,6 +26,7 @@ typedef struct
 
 typedef struct
 {
+  unsigned id;
   Initials initials;
   char job_title[MAX_LEN];
   char place_of_work[MAX_LEN];

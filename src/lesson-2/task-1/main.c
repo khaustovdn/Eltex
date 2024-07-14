@@ -5,6 +5,11 @@
 
 #include "phonebook.h"
 
+static Contact* phonebook_contacts;
+
+char
+phonebook_menu();
+
 char*
 create_wrapped_title(const char* title,
                      int width,
@@ -20,13 +25,16 @@ main(int argc, char* argv[])
   }
   puts(wrapped_title);
   free(wrapped_title);
+
   char action_choice;
+  PhoneBook* phonebook = phonebook_constuct();
   while ((action_choice = phonebook_menu()) != 'q') {
     switch (action_choice) {
       case 'a':
         puts("Append contact action chosen");
         Contact contact;
         contact_construct(&contact);
+        phonebook_append(phonebook, contact);
         break;
       case 'e':
         puts("Edit contact info action chosen");
@@ -41,7 +49,23 @@ main(int argc, char* argv[])
     }
   }
 
+  free(phonebook->contacts);
+  free(phonebook);
+
   return EXIT_SUCCESS;
+}
+
+char
+phonebook_menu()
+{
+  fputs("Choose an action:\n\ta. Append "
+        "contact\n\te. Edit contact info\n\tr. "
+        "Remove contact\n\tq. Quit\nInput: ",
+        stdout);
+  char action_choice = fgetc(stdin);
+  while (fgetc(stdin) != '\n')
+    ;
+  return action_choice;
 }
 
 char*

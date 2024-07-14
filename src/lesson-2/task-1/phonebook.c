@@ -1,17 +1,45 @@
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 
+#include "contact.h"
 #include "phonebook.h"
 
-char
-phonebook_menu()
+PhoneBook*
+phonebook_constuct()
 {
-  fputs("Choose an action:\n\ta. Append "
-        "contact\n\te. Edit contact info\n\tr. "
-        "Remove contact\n\tq. Quit\nInput: ",
-        stdout);
-  char action_choice = fgetc(stdin);
-  while (fgetc(stdin) != '\n')
-    ;
-  return action_choice;
+  PhoneBook* phonebook =
+    (PhoneBook*)malloc(sizeof(PhoneBook));
+  if (phonebook == NULL) {
+    fprintf(
+      stderr,
+      "Error: Unable to allocate memory for phonebook.\n");
+    exit(1);
+  }
+
+  phonebook->contacts =
+    (Contact*)malloc(N * sizeof(Contact));
+  if (phonebook->contacts == NULL) {
+    free(phonebook);
+    fprintf(
+      stderr,
+      "Error: Unable to allocate memory for contacts.\n");
+    exit(1);
+  }
+
+  phonebook->capacity = N;
+  phonebook->count = 0;
+
+  return phonebook;
+}
+
+void
+phonebook_append(PhoneBook* phonebook, Contact contact)
+{
+  for (int i = 0; i < N; i++)
+    if (phonebook->contacts[i].initials.name[0] == '\0') {
+      contact.id = i + 1;
+      phonebook->contacts[i] = contact;
+      break;
+    }
 }

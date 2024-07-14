@@ -53,6 +53,7 @@ contact_fill_property(char* property,
 void
 contact_construct(Contact* contact)
 {
+  contact->id = 0;
   CONTACT_FILL_PROPERTY(contact->initials.surname);
   CONTACT_FILL_PROPERTY(contact->initials.name);
 }
