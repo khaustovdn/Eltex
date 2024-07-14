@@ -21,6 +21,7 @@ int main(int argc, char* argv[]) {
     switch (action_choice) {
       case 'a':
         puts("Append contact action chosen");
+        Contact contact;
         break;
       case 'e':
         puts("Edit contact info action chosen");
