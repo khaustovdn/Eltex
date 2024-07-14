@@ -5,33 +5,39 @@
 
 typedef struct
 {
-  char surname[MAX_LEN];
+  char value[MAX_LEN];
   char name[MAX_LEN];
-  char patronymic[MAX_LEN];
+} Variable;
+
+typedef struct
+{
+  Variable surname;
+  Variable name;
+  Variable patronymic;
 } Initials;
 
 typedef struct
 {
-  char mobile[MAX_LEN];
-  char home[MAX_LEN];
-  char work[MAX_LEN];
+  Variable mobile;
+  Variable home;
+  Variable work;
 } PhoneNumber;
 
 typedef struct
 {
-  char vkontakte[MAX_LEN];
-  char youtube[MAX_LEN];
-  char telegram[MAX_LEN];
+  Variable vkontakte;
+  Variable youtube;
+  Variable telegram;
 } SocialNetwork;
 
 typedef struct
 {
   unsigned id;
   Initials initials;
-  char job_title[MAX_LEN];
-  char place_of_work[MAX_LEN];
+  Variable job_title;
+  Variable place_of_work;
   PhoneNumber phone_number;
-  char email_address[MAX_LEN];
+  Variable email_address;
   SocialNetwork social_network;
 } Contact;
 
@@ -42,7 +48,6 @@ const char*
 contact_menu();
 
 void
-contact_fill_property(char* property,
-                      const char* property_name);
+contact_fill_property(Variable* property);
 
 #endif // CONTACT_H_

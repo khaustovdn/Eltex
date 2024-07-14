@@ -7,61 +7,55 @@
 #include "contact.h"
 
 void
-contact_fill_property(char* property,
-                      const char* property_name)
+contact_fill_property(Variable* property)
 {
-  char* last_token = (char*)malloc(MAX_LEN * sizeof(char));
-  char* extracted_property_name =
-    (char*)malloc(MAX_LEN * sizeof(char));
-  if (last_token == NULL ||
-      extracted_property_name == NULL) {
-    fprintf(stderr, "Error: Memory allocation failed.\n");
-    exit(EXIT_FAILURE);
-  }
-
-  strcpy(last_token, property_name);
-  char* token = strtok(last_token, ".");
-  while (token != NULL) {
-    strcpy(extracted_property_name, token);
-    token = strtok(NULL, ".");
-  }
-
-  printf("Input %s: ", extracted_property_name);
+  printf("Input %s: ", property->name);
 
   int i = 0;
-  while ((property[i] = fgetc(stdin)) != '\n' &&
+  while ((property->value[i] = fgetc(stdin)) != '\n' &&
          i < MAX_LEN) {
     i++;
   }
 
-  if (i == MAX_LEN && property[i - 1] != '\n') {
+  if (i == MAX_LEN && property->value[i - 1] != '\n') {
     printf("Warning: Input exceeds the maximum "
            "length. It will be truncated.\n");
     while (fgetc(stdin) != '\n')
       ;
   }
 
-  property[i] = '\0';
-
-  free(last_token);
-  free(extracted_property_name);
+  property->value[i] = '\0';
 }
-
-#define CONTACT_FILL_PROPERTY(property)                    \
-  contact_fill_property(property, #property)
 
 typedef struct
 {
   const char* name;
-  char* property;
+  Variable* property;
 } CommandEntry;
+
+Variable*
+variable_construct(const char* name)
+{
+  Variable* var = (Variable*)malloc(sizeof(Variable));
+  if (var == NULL) {
+    fprintf(stderr, "Error: Memory allocation failed.\n");
+    exit(EXIT_FAILURE);
+  }
+  strncpy(var->name, name, MAX_LEN);
+  return var;
+}
+
+#define DECLARE_VARIABLE(member_name)                      \
+  variable_construct(#member_name)
 
 void
 contact_construct(Contact* contact)
 {
   contact->id = 0;
-  CONTACT_FILL_PROPERTY(contact->initials.surname);
-  CONTACT_FILL_PROPERTY(contact->initials.name);
+  contact_fill_property(
+    DECLARE_VARIABLE(contact->initials.surname));
+  contact_fill_property(
+    DECLARE_VARIABLE(contact->initials.name));
 
   char* action_choice =
     (char*)malloc(MAX_LEN * sizeof(char));
@@ -71,17 +65,27 @@ contact_construct(Contact* contact)
   }
 
   CommandEntry commands[] = {
-    { "ip", contact->initials.patronymic },
-    { "jt", contact->job_title },
-    { "pow", contact->place_of_work },
-    { "mpn", contact->phone_number.mobile },
-    { "hpn", contact->phone_number.home },
-    { "wpn", contact->phone_number.work },
-    { "ea", contact->email_address },
-    { "vksn", contact->social_network.vkontakte },
-    { "ytsn", contact->social_network.youtube },
-    { "tgsn", contact->social_network.telegram },
-    { NULL, NULL }
+    { "ip",
+      DECLARE_VARIABLE(&contact->initials.patronymic) },
+    { "jt", DECLARE_VARIABLE(&contact->job_title) },
+    { "pow", DECLARE_VARIABLE(&contact->place_of_work) },
+    { "mpn",
+      DECLARE_VARIABLE(&contact->phone_number.mobile) },
+    { "hpn",
+      DECLARE_VARIABLE(&contact->phone_number.home) },
+    { "wpn",
+      DECLARE_VARIABLE(&contact->phone_number.work) },
+    { "ea", DECLARE_VARIABLE(&contact->email_address) },
+    { "vksn",
+      DECLARE_VARIABLE(
+        &contact->social_network.vkontakte) },
+    { "ytsn",
+      DECLARE_VARIABLE(&contact->social_network.youtube) },
+    { "tgsn",
+      DECLARE_VARIABLE(&contact->social_network.telegram) },
+    {
+      NULL,
+    }
   };
 
   while (
@@ -90,7 +94,7 @@ contact_construct(Contact* contact)
     int i = 0;
     while (commands[i].name != NULL) {
       if (strcmp(action_choice, commands[i].name) == 0) {
-        CONTACT_FILL_PROPERTY(commands[i].property);
+        contact_fill_property(commands[i].property);
         break;
       }
       i++;

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "contact.h"
 #include "phonebook.h"
 
 static Contact* phonebook_contacts;
