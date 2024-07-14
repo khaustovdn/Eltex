@@ -2,7 +2,7 @@
 #define PHONEBOOK_H_
 
 #include "contact.h"
-#define N 16
+#define MAX_CONTACTS 16
 
 typedef struct
 {

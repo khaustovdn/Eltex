@@ -14,20 +14,20 @@ phonebook_constuct()
     fprintf(
       stderr,
       "Error: Unable to allocate memory for phonebook.\n");
-    exit(1);
+    exit(EXIT_FAILURE);
   }
 
   phonebook->contacts =
-    (Contact*)malloc(N * sizeof(Contact));
+    (Contact*)malloc(MAX_CONTACTS * sizeof(Contact));
   if (phonebook->contacts == NULL) {
     free(phonebook);
     fprintf(
       stderr,
       "Error: Unable to allocate memory for contacts.\n");
-    exit(1);
+    exit(EXIT_FAILURE);
   }
 
-  phonebook->capacity = N;
+  phonebook->capacity = MAX_CONTACTS;
   phonebook->count = 0;
 
   return phonebook;
@@ -36,10 +36,18 @@ phonebook_constuct()
 void
 phonebook_append(PhoneBook* phonebook, Contact contact)
 {
-  for (int i = 0; i < N; i++)
-    if (phonebook->contacts[i].initials.name[0] == '\0') {
-      contact.id = i + 1;
-      phonebook->contacts[i] = contact;
-      break;
-    }
+  if (phonebook->count < MAX_CONTACTS) {
+    phonebook->contacts[phonebook->count] = contact;
+    phonebook->count++;
+  } else {
+    puts("Warning: the phone book is full");
+  }
 }
+
+void
+phonebook_edit(PhoneBook* phonebook, Contact* contact)
+{}
+
+void
+phonebook_remove(PhoneBook* phonebook, int id)
+{}

@@ -42,8 +42,6 @@ main(int argc, char* argv[])
       case 'r':
         puts("Remove contact action chosen");
         break;
-      case 'q':
-        return EXIT_FAILURE;
       default:
         puts("Invalid choice of action");
     }

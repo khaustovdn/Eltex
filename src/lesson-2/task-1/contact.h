@@ -22,7 +22,7 @@ typedef struct
   char vkontakte[MAX_LEN];
   char youtube[MAX_LEN];
   char telegram[MAX_LEN];
-} SocialNetworks;
+} SocialNetwork;
 
 typedef struct
 {
@@ -32,11 +32,14 @@ typedef struct
   char place_of_work[MAX_LEN];
   PhoneNumber phone_number;
   char email_address[MAX_LEN];
-  SocialNetworks social_networks;
+  SocialNetwork social_network;
 } Contact;
 
 void
 contact_construct(Contact* contact);
+
+const char*
+contact_menu();
 
 void
 contact_fill_property(char* property,
