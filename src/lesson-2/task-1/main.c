@@ -3,14 +3,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "contact.h"
+#include "phonebook.h"
 
 char*
 create_wrapped_title(const char* title,
                      int width,
                      char symbol);
-char
-get_action_choice();
 
 int
 main(int argc, char* argv[])
@@ -22,9 +20,8 @@ main(int argc, char* argv[])
   }
   puts(wrapped_title);
   free(wrapped_title);
-
-  for (;;) {
-    char action_choice = get_action_choice();
+  char action_choice;
+  while ((action_choice = phonebook_menu()) != 'q') {
     switch (action_choice) {
       case 'a':
         puts("Append contact action chosen");
@@ -38,7 +35,7 @@ main(int argc, char* argv[])
         puts("Remove contact action chosen");
         break;
       case 'q':
-        return EXIT_SUCCESS;
+        return EXIT_FAILURE;
       default:
         puts("Invalid choice of action");
     }
@@ -72,18 +69,4 @@ create_wrapped_title(const char* title,
     result[i + wrap_width] = title[i];
 
   return result;
-}
-
-char
-get_action_choice()
-{
-  char action_choice;
-  fputs("Choose an action:\n\ta. Append "
-        "contact\n\te. Edit contact info\n\tr. "
-        "Remove contact\n\tq. Quit\nInput: ",
-        stdout);
-  action_choice = fgetc(stdin);
-  while (fgetc(stdin) != '\n')
-    ;
-  return action_choice;
 }

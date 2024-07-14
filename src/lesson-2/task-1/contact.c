@@ -54,4 +54,5 @@ void
 contact_construct(Contact* contact)
 {
   CONTACT_FILL_PROPERTY(contact->initials.surname);
+  CONTACT_FILL_PROPERTY(contact->initials.name);
 }
