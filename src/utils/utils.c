@@ -51,18 +51,33 @@ output_wrapped_title(char* wrapped_title)
 }
 
 int
-input_number()
+input_integer()
 {
-  char* result = input_string();
-  int contact_id;
-  if (sscanf(result, "%d", &contact_id) != 1) {
+  char* string = input_string();
+  int result;
+  if (sscanf(string, "%d", &result) != 1) {
     fprintf(stderr, "Error: Invalid input. Please enter a valid contact id.\n");
-    free(result);
+    free(string);
     return -1;
   }
 
-  free(result);
-  return contact_id;
+  free(string);
+  return result;
+}
+
+double
+input_double()
+{
+  char* string = input_string();
+  double result;
+  if (sscanf(string, "%lf", &result) != 1) {
+    fprintf(stderr, "Error: Invalid input. Please enter a valid contact id.\n");
+    free(string);
+    return -1;
+  }
+
+  free(string);
+  return result;
 }
 
 char*

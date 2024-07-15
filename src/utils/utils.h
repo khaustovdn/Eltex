@@ -25,7 +25,10 @@ void
 output_wrapped_title(char* wrapped_title);
 
 int
-input_number();
+input_integer();
+
+double
+input_double();
 
 char*
 input_string();
