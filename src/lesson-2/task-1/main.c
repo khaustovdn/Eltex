@@ -8,11 +8,9 @@
 int
 main(int argc, char* argv[])
 {
-  char* wrapped_title = create_wrapped_title(
-    "PhoneBook Application", 50, '-');
+  char* wrapped_title = create_wrapped_title("PhoneBook Application", 50, '-');
   if (wrapped_title == NULL) {
-    fprintf(stderr,
-            "Error: Memory allocation failed.\n");
+    fprintf(stderr, "Error: Memory allocation failed.\n");
     exit(EXIT_FAILURE);
   }
   puts(wrapped_title);
@@ -20,28 +18,92 @@ main(int argc, char* argv[])
 
   char action_choice;
   PhoneBook* phonebook = phonebook_constuct();
-  while ((action_choice = phonebook_menu()) !=
-         'q') {
+  while ((action_choice = phonebook_menu()) != 'q') {
     switch (action_choice) {
       case 'a':
         puts("Append contact action chosen");
         Contact* contact = contact_construct();
         phonebook_append(phonebook, contact);
-        contact_print(*contact);
         free(contact);
         break;
-      case 'e':
-        puts("Edit contact info action chosen");
+      case 'e': {
+        fputs("Edit contact info action chosen\nInput contact id: ", stdout);
+        char* action_choice = (char*)malloc(MAX_LEN * sizeof(char));
+        if (action_choice == NULL) {
+          fprintf(stderr, "Error: Memory allocation failed.\n");
+          exit(EXIT_FAILURE);
+        }
+
+        int i = 0;
+        int c;
+        while ((c = fgetc(stdin)) != '\n' && i < MAX_LEN - 1) {
+          action_choice[i] = c;
+          i++;
+        }
+        action_choice[i] = '\0';
+
+        if (i == MAX_LEN - 1 && c != '\n') {
+          printf("Warning: Input exceeds the maximum length. It will be "
+                 "truncated.\n");
+          while ((c = fgetc(stdin)) != '\n' && c != EOF)
+            ;
+        }
+
+        int contact_id;
+        if (sscanf(action_choice, "%d", &contact_id) != 1) {
+          fprintf(stderr,
+                  "Error: Invalid input. Please enter a valid contact id.\n");
+          free(action_choice);
+          break;
+        }
+
+        phonebook_edit(phonebook, contact_id);
+        free(action_choice);
         break;
-      case 'r':
-        puts("Remove contact action chosen");
+      }
+      case 'r': {
+        fputs("Remove contact action chosen\nInput contact id: ", stdout);
+        char* action_choice = (char*)malloc(MAX_LEN * sizeof(char));
+        if (action_choice == NULL) {
+          fprintf(stderr, "Error: Memory allocation failed.\n");
+          exit(EXIT_FAILURE);
+        }
+
+        int i = 0;
+        int c;
+        while ((c = fgetc(stdin)) != '\n' && i < MAX_LEN - 1) {
+          action_choice[i] = c;
+          i++;
+        }
+        action_choice[i] = '\0';
+
+        if (i == MAX_LEN - 1 && c != '\n') {
+          printf("Warning: Input exceeds the maximum length. It will be "
+                 "truncated.\n");
+          while ((c = fgetc(stdin)) != '\n' && c != EOF)
+            ;
+        }
+
+        int contact_id;
+        if (sscanf(action_choice, "%d", &contact_id) != 1) {
+          fprintf(stderr,
+                  "Error: Invalid input. Please enter a valid contact id.\n");
+          free(action_choice);
+          break;
+        }
+
+        phonebook_remove(phonebook, contact_id);
+        free(action_choice);
+        break;
+      }
+      case 'p':
+        puts("Print contact info action choosen");
+        phonebook_print(*phonebook);
         break;
       default:
         puts("Invalid choice of action");
     }
   }
-
-  phonebook_print(*phonebook);
 
   free(phonebook->contacts);
   free(phonebook);
@@ -52,11 +114,9 @@ main(int argc, char* argv[])
 char
 phonebook_menu()
 {
-  char* wrapped_title = create_wrapped_title(
-    "PhoneBook Menu", 50, '-');
+  char* wrapped_title = create_wrapped_title("PhoneBook Menu", 50, '-');
   if (wrapped_title == NULL) {
-    fprintf(stderr,
-            "Error: Memory allocation failed.\n");
+    fprintf(stderr, "Error: Memory allocation failed.\n");
     exit(EXIT_FAILURE);
   }
   puts(wrapped_title);
@@ -64,7 +124,7 @@ phonebook_menu()
 
   fputs("Choose an action:\n\ta. Append "
         "contact\n\te. Edit contact info\n\tr. "
-        "Remove contact\n\tq. Quit\nInput: ",
+        "Remove contact\n\tp. Print\n\tq. Quit\nInput: ",
         stdout);
   char action_choice = fgetc(stdin);
   while (fgetc(stdin) != '\n')
@@ -73,24 +133,17 @@ phonebook_menu()
 }
 
 char*
-create_wrapped_title(const char* title,
-                     int width,
-                     char symbol)
+create_wrapped_title(const char* title, int width, char symbol)
 {
   if (width < strlen(title)) {
-    fputs(
-      "Error: Width is too small for the title",
-      stdout);
+    fputs("Error: Width is too small for the title", stdout);
     return NULL;
   }
-  size_t wrap_width =
-    (width - strlen(title)) >> 1;
+  size_t wrap_width = (width - strlen(title)) >> 1;
 
-  char* result =
-    (char*)malloc((width + 1) * sizeof(char));
+  char* result = (char*)malloc((width + 1) * sizeof(char));
   if (result == NULL) {
-    fputs("Error: Failed to allocate memory",
-          stdout);
+    fputs("Error: Failed to allocate memory", stdout);
     return NULL;
   }
 

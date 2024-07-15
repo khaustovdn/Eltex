@@ -9,8 +9,7 @@
 PhoneBook*
 phonebook_constuct()
 {
-  PhoneBook* phonebook =
-    (PhoneBook*)malloc(sizeof(PhoneBook));
+  PhoneBook* phonebook = (PhoneBook*)malloc(sizeof(PhoneBook));
   if (phonebook == NULL) {
     fprintf(stderr,
             "Error: Unable to allocate memory "
@@ -18,8 +17,7 @@ phonebook_constuct()
     exit(EXIT_FAILURE);
   }
 
-  phonebook->contacts = (Contact*)malloc(
-    MAX_CONTACTS * sizeof(Contact));
+  phonebook->contacts = (Contact*)malloc(MAX_CONTACTS * sizeof(Contact));
   if (phonebook->contacts == NULL) {
     free(phonebook);
     fprintf(stderr,
@@ -35,35 +33,65 @@ phonebook_constuct()
 }
 
 void
-phonebook_append(PhoneBook* phonebook,
-                 Contact* contact)
+phonebook_append(PhoneBook* phonebook, Contact* contact)
 {
   if (phonebook->count < MAX_CONTACTS) {
-    contact->id = phonebook->count + 1;
-    phonebook->contacts[phonebook->count] =
-      *contact;
+    int i = 0;
+    while (i < phonebook->capacity) {
+      if (phonebook_search(*phonebook, i) == -1)
+        break;
+      i++;
+    }
+
+    contact->id = i + 1;
+    phonebook->contacts[phonebook->count] = *contact;
     phonebook->count++;
   } else {
     puts("Warning: the phone book is full");
   }
 }
 
+static int
+phonebook_search(PhoneBook phonebook, int id)
+{
+  for (int i = 0; i < phonebook.count; i++) {
+    if (phonebook.contacts[i].id == id) {
+      return i;
+    }
+  }
+  return -1;
+}
+
 void
 phonebook_edit(PhoneBook* phonebook, int id)
-{}
+{
+  int index = phonebook_search(*phonebook, id);
+  if (index != -1)
+    contact_fill_optional_properties(&phonebook->contacts[index]);
+  else
+    printf("Contact with ID %d not found.\n", id);
+}
 
 void
 phonebook_remove(PhoneBook* phonebook, int id)
-{}
+{
+  int index = phonebook_search(*phonebook, id);
+  if (index != -1) {
+    for (int i = index; i < phonebook->count - 1; i++) {
+      phonebook->contacts[i] = phonebook->contacts[i + 1];
+    }
+    phonebook->count--;
+  } else {
+    printf("Contact with ID %d not found.\n", id);
+  }
+}
 
 void
 phonebook_print(PhoneBook phonebook)
 {
-  char* wrapped_title =
-    create_wrapped_title("Contacts", 50, '-');
+  char* wrapped_title = create_wrapped_title("Contacts", 50, '-');
   if (wrapped_title == NULL) {
-    fprintf(stderr,
-            "Error: Memory allocation failed.\n");
+    fprintf(stderr, "Error: Memory allocation failed.\n");
     exit(EXIT_FAILURE);
   }
   puts(wrapped_title);

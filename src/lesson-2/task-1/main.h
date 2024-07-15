@@ -13,8 +13,6 @@ char
 phonebook_menu();
 
 char*
-create_wrapped_title(const char* title,
-                     int width,
-                     char symbol);
+create_wrapped_title(const char* title, int width, char symbol);
 
 #endif // MAIN_H_

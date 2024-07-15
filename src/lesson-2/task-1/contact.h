@@ -48,19 +48,16 @@ typedef struct
 } Contact;
 
 Variable*
-variable_construct(Variable* property,
-                   const char* name);
+variable_construct(Variable* property, const char* name);
 
 void
 contact_fill_property(Variable* property);
 
 void
-contact_fill_required_properties(
-  Contact* contact);
+contact_fill_required_properties(Contact* contact);
 
 void
-contact_fill_optional_properties(
-  Contact* contact);
+contact_fill_optional_properties(Contact* contact);
 
 Contact*
 contact_construct();

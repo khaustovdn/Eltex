@@ -15,12 +15,10 @@ PhoneBook*
 phonebook_constuct();
 
 void
-phonebook_append(PhoneBook* phonebook,
-                 Contact* contact);
+phonebook_append(PhoneBook* phonebook, Contact* contact);
 
-int
-phonebook_search(PhoneBook phonebook,
-                 Contact contact);
+static int
+phonebook_search(PhoneBook phonebook, int id);
 
 void
 phonebook_edit(PhoneBook* phonebook, int id);
