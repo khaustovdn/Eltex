@@ -56,7 +56,7 @@ input_integer()
   char* string = input_string();
   int result;
   if (sscanf(string, "%d", &result) != 1) {
-    fprintf(stderr, "Error: Invalid input. Please enter a valid contact id.\n");
+    fprintf(stderr, "Error: Invalid input. Please enter a valid integer.\n");
     free(string);
     return -1;
   }
@@ -71,7 +71,7 @@ input_double()
   char* string = input_string();
   double result;
   if (sscanf(string, "%lf", &result) != 1) {
-    fprintf(stderr, "Error: Invalid input. Please enter a valid contact id.\n");
+    fprintf(stderr, "Error: Invalid input. Please enter a valid double.\n");
     free(string);
     return -1;
   }
