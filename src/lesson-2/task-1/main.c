@@ -3,39 +3,32 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "contact.h"
-#include "phonebook.h"
-
-static Contact* phonebook_contacts;
-
-char
-phonebook_menu();
-
-char*
-create_wrapped_title(const char* title,
-                     int width,
-                     char symbol);
+#include "main.h"
 
 int
 main(int argc, char* argv[])
 {
-  char* wrapped_title =
-    create_wrapped_title("Contacts", 30, '-');
+  char* wrapped_title = create_wrapped_title(
+    "PhoneBook Application", 50, '-');
   if (wrapped_title == NULL) {
-    return EXIT_FAILURE;
+    fprintf(stderr,
+            "Error: Memory allocation failed.\n");
+    exit(EXIT_FAILURE);
   }
   puts(wrapped_title);
   free(wrapped_title);
 
   char action_choice;
   PhoneBook* phonebook = phonebook_constuct();
-  while ((action_choice = phonebook_menu()) != 'q') {
+  while ((action_choice = phonebook_menu()) !=
+         'q') {
     switch (action_choice) {
       case 'a':
         puts("Append contact action chosen");
-        Contact contact;
-        contact_construct(&contact);
+        Contact* contact = contact_construct();
         phonebook_append(phonebook, contact);
+        contact_print(*contact);
+        free(contact);
         break;
       case 'e':
         puts("Edit contact info action chosen");
@@ -48,6 +41,8 @@ main(int argc, char* argv[])
     }
   }
 
+  phonebook_print(*phonebook);
+
   free(phonebook->contacts);
   free(phonebook);
 
@@ -57,6 +52,16 @@ main(int argc, char* argv[])
 char
 phonebook_menu()
 {
+  char* wrapped_title = create_wrapped_title(
+    "PhoneBook Menu", 50, '-');
+  if (wrapped_title == NULL) {
+    fprintf(stderr,
+            "Error: Memory allocation failed.\n");
+    exit(EXIT_FAILURE);
+  }
+  puts(wrapped_title);
+  free(wrapped_title);
+
   fputs("Choose an action:\n\ta. Append "
         "contact\n\te. Edit contact info\n\tr. "
         "Remove contact\n\tq. Quit\nInput: ",
@@ -73,23 +78,29 @@ create_wrapped_title(const char* title,
                      char symbol)
 {
   if (width < strlen(title)) {
-    fputs("Error: Width is too small for the title",
-          stdout);
+    fputs(
+      "Error: Width is too small for the title",
+      stdout);
     return NULL;
   }
-  size_t wrap_width = (width - strlen(title)) >> 1;
+  size_t wrap_width =
+    (width - strlen(title)) >> 1;
 
-  char* result = (char*)malloc((width + 1) * sizeof(char));
+  char* result =
+    (char*)malloc((width + 1) * sizeof(char));
   if (result == NULL) {
-    fputs("Error: Failed to allocate memory", stdout);
+    fputs("Error: Failed to allocate memory",
+          stdout);
     return NULL;
   }
 
   memset(result, symbol, width);
-  result[width] = '\0';
+  result[width] = '\n';
 
   for (int i = 0; i < strlen(title); i++)
     result[i + wrap_width] = title[i];
+
+  puts("");
 
   return result;
 }
