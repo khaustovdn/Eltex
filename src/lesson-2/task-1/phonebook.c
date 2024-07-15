@@ -2,8 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "contact.h"
-#include "main.h"
 #include "phonebook.h"
 
 PhoneBook*

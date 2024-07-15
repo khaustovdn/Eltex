@@ -1,19 +1,7 @@
 #ifndef CONTACT_H_
 #define CONTACT_H_
 
-#define MAX_LEN 256
-
-typedef struct
-{
-  char value[MAX_LEN];
-  char name[MAX_LEN];
-} Variable;
-
-typedef struct
-{
-  const char* name;
-  Variable* property;
-} CommandEntry;
+#include "../../utils/utils.h"
 
 typedef struct
 {
@@ -46,9 +34,6 @@ typedef struct
   Variable email_address;
   SocialNetwork social_network;
 } Contact;
-
-Variable*
-variable_construct(Variable* property, const char* name);
 
 void
 contact_fill_property(Variable* property);

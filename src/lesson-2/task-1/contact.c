@@ -5,15 +5,6 @@
 #include <string.h>
 
 #include "contact.h"
-#include "main.h"
-
-Variable*
-variable_construct(Variable* property, const char* name)
-{
-  strncpy(property->name, name, MAX_LEN - 1);
-  property->name[MAX_LEN - 1] = '\0';
-  return property;
-}
 
 void
 contact_fill_property(Variable* property)
