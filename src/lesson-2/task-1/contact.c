@@ -10,20 +10,7 @@ void
 contact_fill_property(Variable* property)
 {
   printf("Input %s: ", property->name);
-
-  int i = 0;
-  while ((property->value[i] = fgetc(stdin)) != '\n' && i < MAX_LEN) {
-    i++;
-  }
-
-  if (i == MAX_LEN && property->value[i - 1] != '\n') {
-    printf("Warning: Input exceeds the maximum "
-           "length. It will be truncated.\n");
-    while (fgetc(stdin) != '\n')
-      ;
-  }
-
-  property->value[i] = '\0';
+  strncpy(property->value, input_string(), MAX_LEN);
 }
 
 #define DECLARE_VARIABLE(member_name)                                          \
@@ -99,12 +86,7 @@ const char*
 contact_menu()
 {
   char* wrapped_title = create_wrapped_title("Contact Menu", 50, '-');
-  if (wrapped_title == NULL) {
-    fprintf(stderr, "Error: Memory allocation failed.\n");
-    exit(EXIT_FAILURE);
-  }
-  puts(wrapped_title);
-  free(wrapped_title);
+  output_wrapped_title(wrapped_title);
 
   fputs("Do you want to set it up:\n\tip. "
         "Patronymic\n\t"
@@ -116,27 +98,8 @@ contact_menu()
         "YouTube Social Network\n\ttgsn. Telegram "
         "Social Network\n\tq. Quit\nInput: ",
         stdout);
-  char* action_choice = (char*)malloc(MAX_LEN * sizeof(char));
-  if (action_choice == NULL) {
-    fprintf(stderr, "Error: Memory allocation failed.\n");
-    exit(EXIT_FAILURE);
-  }
-
-  int i = 0;
-  while ((action_choice[i] = fgetc(stdin)) != '\n' && i < MAX_LEN) {
-    i++;
-  }
-
-  if (i == MAX_LEN && action_choice[i - 1] != '\n') {
-    printf("Warning: Input exceeds the maximum "
-           "length. It will be truncated.\n");
-    while (fgetc(stdin) != '\n')
-      ;
-  }
-
-  action_choice[i] = '\0';
-
-  return action_choice;
+  
+  return input_string();
 }
 
 void
@@ -157,12 +120,7 @@ contact_print(Contact contact)
                              NULL };
 
   char* wrapped_title = create_wrapped_title("Item", 30, '-');
-  if (wrapped_title == NULL) {
-    fprintf(stderr, "Error: Memory allocation failed.\n");
-    exit(EXIT_FAILURE);
-  }
-  puts(wrapped_title);
-  free(wrapped_title);
+  output_wrapped_title(wrapped_title);
 
   printf("id: %d\n", contact.id);
   for (int i = 0; properties[i] != NULL; i++) {

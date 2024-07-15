@@ -87,13 +87,6 @@ phonebook_remove(PhoneBook* phonebook, int id)
 void
 phonebook_print(PhoneBook phonebook)
 {
-  char* wrapped_title = create_wrapped_title("Contacts", 50, '-');
-  if (wrapped_title == NULL) {
-    fprintf(stderr, "Error: Memory allocation failed.\n");
-    exit(EXIT_FAILURE);
-  }
-  puts(wrapped_title);
-  free(wrapped_title);
   for (int i = 0; i < phonebook.count; i++)
     contact_print(phonebook.contacts[i]);
 }
