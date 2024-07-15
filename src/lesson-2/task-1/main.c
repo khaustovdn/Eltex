@@ -28,72 +28,18 @@ main(int argc, char* argv[])
         break;
       case 'e': {
         fputs("Edit contact info action chosen\nInput contact id: ", stdout);
-        char* action_choice = (char*)malloc(MAX_LEN * sizeof(char));
-        if (action_choice == NULL) {
-          fprintf(stderr, "Error: Memory allocation failed.\n");
-          exit(EXIT_FAILURE);
-        }
-
-        int i = 0;
-        int c;
-        while ((c = fgetc(stdin)) != '\n' && i < MAX_LEN - 1) {
-          action_choice[i] = c;
-          i++;
-        }
-        action_choice[i] = '\0';
-
-        if (i == MAX_LEN - 1 && c != '\n') {
-          printf("Warning: Input exceeds the maximum length. It will be "
-                 "truncated.\n");
-          while ((c = fgetc(stdin)) != '\n' && c != EOF)
-            ;
-        }
-
         int contact_id;
-        if (sscanf(action_choice, "%d", &contact_id) != 1) {
-          fprintf(stderr,
-                  "Error: Invalid input. Please enter a valid contact id.\n");
-          free(action_choice);
+        if ((contact_id = input_number()) == -1)
           break;
-        }
-
         phonebook_edit(phonebook, contact_id);
-        free(action_choice);
         break;
       }
       case 'r': {
         fputs("Remove contact action chosen\nInput contact id: ", stdout);
-        char* action_choice = (char*)malloc(MAX_LEN * sizeof(char));
-        if (action_choice == NULL) {
-          fprintf(stderr, "Error: Memory allocation failed.\n");
-          exit(EXIT_FAILURE);
-        }
-
-        int i = 0;
-        int c;
-        while ((c = fgetc(stdin)) != '\n' && i < MAX_LEN - 1) {
-          action_choice[i] = c;
-          i++;
-        }
-        action_choice[i] = '\0';
-
-        if (i == MAX_LEN - 1 && c != '\n') {
-          printf("Warning: Input exceeds the maximum length. It will be "
-                 "truncated.\n");
-          while ((c = fgetc(stdin)) != '\n' && c != EOF)
-            ;
-        }
-
         int contact_id;
-        if (sscanf(action_choice, "%d", &contact_id) != 1) {
-          fprintf(stderr,
-                  "Error: Invalid input. Please enter a valid contact id.\n");
-          free(action_choice);
+        if ((contact_id = input_number()) == -1)
           break;
-        }
-
         phonebook_remove(phonebook, contact_id);
-        free(action_choice);
         break;
       }
       case 'p':
@@ -156,4 +102,38 @@ create_wrapped_title(const char* title, int width, char symbol)
   puts("");
 
   return result;
+}
+
+int
+input_number()
+{
+  char* action_choice = (char*)malloc(MAX_LEN * sizeof(char));
+  if (action_choice == NULL) {
+    fprintf(stderr, "Error: Memory allocation failed.\n");
+    exit(EXIT_FAILURE);
+  }
+
+  int i = 0;
+  int c;
+  while ((c = fgetc(stdin)) != '\n' && i < MAX_LEN - 1) {
+    action_choice[i] = c;
+    i++;
+  }
+  action_choice[i] = '\0';
+  if (i == MAX_LEN - 1 && c != '\n') {
+    printf("Warning: Input exceeds the maximum length. It will be "
+           "truncated.\n");
+    while ((c = fgetc(stdin)) != '\n' && c != EOF)
+      ;
+  }
+
+  int contact_id;
+  if (sscanf(action_choice, "%d", &contact_id) != 1) {
+    fprintf(stderr, "Error: Invalid input. Please enter a valid contact id.\n");
+    free(action_choice);
+    return -1;
+  }
+
+  free(action_choice);
+  return contact_id;
 }
