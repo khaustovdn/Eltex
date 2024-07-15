@@ -94,7 +94,12 @@ char
 input_char()
 {
   char result = fgetc(stdin);
+  int i = 0;
   while (fgetc(stdin) != '\n')
-    ;
+    i++;
+  if (i > 0) {
+    puts("Warning: Input exceeds the maximum length.");
+    return '\0';
+  }
   return result;
 }
