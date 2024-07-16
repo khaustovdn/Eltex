@@ -17,7 +17,12 @@ main(int argc, char* argv[])
                               { "/", divide },
                               { NULL, NULL } };
 
-  char* action_choice;
+  char* action_choice = (char*)malloc(MAX_LEN * sizeof(char));
+  if (action_choice == NULL) {
+    fprintf(stderr, "Error: Memory allocation failed.\n");
+    exit(EXIT_FAILURE);
+  }
+
   while (strncmp((action_choice = calculator_menu()), "q", MAX_LEN) != 0) {
     InputResult x, y;
     double result;
