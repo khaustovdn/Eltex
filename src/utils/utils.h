@@ -20,7 +20,7 @@ typedef struct
 typedef struct
 {
   const char* name;
-  Variable* property;
+  void* property;
 } CommandEntry;
 
 Variable*

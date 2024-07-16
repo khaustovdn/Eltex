@@ -36,6 +36,7 @@ main(int argc, char* argv[])
                                                    (*(double*)y.value));
 
         printf("Result: %lf\n", result);
+        break;
       }
       i++;
     }
