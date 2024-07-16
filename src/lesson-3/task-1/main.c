@@ -6,13 +6,16 @@
 #include "converter.h"
 #include "main.h"
 
+typedef char* (*action)(const char* permissions);
+
 int
 main(int argc, char* argv[])
 {
-  CommandEntry converter_commands[] = { { "ipl", converter_to_letter_format },
-                              { "ipn", converter_to_numerical_format },
-                              { "ipb", converter_to_bit_format },
-                              { NULL, NULL } };
+  CommandEntry converter_commands[] = {
+    { "clb", converter_from_letter_to_binary_format },
+    { "cln", converter_from_letter_to_numerical_format },
+    { NULL, NULL }
+  };
 
   char* action_choice = (char*)malloc(MAX_LEN * sizeof(char));
   if (action_choice == NULL) {
@@ -21,11 +24,35 @@ main(int argc, char* argv[])
   }
 
   char* permissions = (char*)malloc(MAX_LEN * sizeof(char));
-  while (strcmp(strncpy(action_choice, permissions_menu(), MAX_LEN), "q") != 0) {
+  if (permissions == NULL) {
+    fprintf(stderr, "Error: Memory allocation failed.\n");
+    exit(EXIT_FAILURE);
   }
+  fputs("Input permissions: ", stdout);
+  permissions = input_string();
+
+  char* result = (char*)malloc(MAX_LEN * sizeof(char));
+  if (result == NULL) {
+    fprintf(stderr, "Error: Memory allocation failed.\n");
+    exit(EXIT_FAILURE);
+  }
+
+  while (strcmp(strncpy(action_choice, permissions_menu(), MAX_LEN), "q") != 0) {
+    int i = 0;
+    for (; converter_commands[i].name != NULL; i++)
+      if (strncmp(converter_commands[i].name, action_choice, MAX_LEN) == 0) {
+        result = ((action)converter_commands[i].property)(permissions);
+        break;
+      }
+    if (converter_commands[i].name == NULL)
+      puts("Invalid choice of action");
+  }
+
+  puts(result);
 
   free(action_choice);
   free(permissions);
+  free(result);
 
   return EXIT_SUCCESS;
 }

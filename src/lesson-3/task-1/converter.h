@@ -4,12 +4,9 @@
 #include "../../utils/utils.h"
 
 char*
-converter_to_letter_format(const char* permissions);
+converter_from_letter_to_binary_format(const char* permissions);
 
 char*
-converter_to_numerical_format(const char* permissions);
-
-char*
-converter_to_bit_format(const char* permissions);
+converter_from_letter_to_numerical_format(const char* permissions);
 
 #endif // CONVERTER_H_
