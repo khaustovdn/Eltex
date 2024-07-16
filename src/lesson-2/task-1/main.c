@@ -19,18 +19,18 @@ main(int argc, char* argv[])
         break;
       case 'e': {
         fputs("Edit contact info action chosen\nInput contact id: ", stdout);
-        int contact_id;
-        if ((contact_id = input_number()) == -1)
+        InputResult contact_id;
+        if ((contact_id = input_unsigned()).success == false)
           break;
-        phonebook_edit(phonebook, contact_id);
+        phonebook_edit(phonebook, *((unsigned *)contact_id.value));
         break;
       }
       case 'r': {
         fputs("Remove contact action chosen\nInput contact id: ", stdout);
-        int contact_id;
-        if ((contact_id = input_number()) == -1)
+        InputResult contact_id;
+        if ((contact_id = input_unsigned()).success == false)
           break;
-        phonebook_remove(phonebook, contact_id);
+        phonebook_remove(phonebook, *((unsigned *)contact_id.value));
         break;
       }
       case 'p':

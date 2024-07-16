@@ -18,13 +18,13 @@ void
 phonebook_append(PhoneBook* phonebook, Contact* contact);
 
 static int
-phonebook_search(PhoneBook phonebook, int id);
+phonebook_search(PhoneBook phonebook, unsigned id);
 
 void
-phonebook_edit(PhoneBook* phonebook, int id);
+phonebook_edit(PhoneBook* phonebook, unsigned id);
 
 void
-phonebook_remove(PhoneBook* phonebook, int id);
+phonebook_remove(PhoneBook* phonebook, unsigned id);
 
 void
 phonebook_print(PhoneBook phonebook);

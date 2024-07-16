@@ -1,4 +1,3 @@
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -101,6 +100,34 @@ is_double(const char* str)
     return false;
   }
   return true;
+}
+
+InputResult
+input_unsigned()
+{
+  InputResult result;
+  {
+    result.value = malloc(sizeof(unsigned));
+    result.success = false;
+  }
+
+  char* str = input_string();
+  if (is_unsigned(str) == false) {
+    puts("Error: Invalid input. Please enter a valid unsigned integer.");
+    free(str);
+    free(result.value);
+    return result;
+  }
+  if (sscanf(str, "%u", (unsigned*)result.value) != 1) {
+    fprintf(stderr, "Error: Invalid input. Please enter a valid unsigned integer.\n");
+    free(str);
+    free(result.value);
+    return result;
+  }
+
+  free(str);
+  result.success = true;
+  return result;
 }
 
 InputResult

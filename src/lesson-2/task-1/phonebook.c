@@ -50,7 +50,7 @@ phonebook_append(PhoneBook* phonebook, Contact* contact)
 }
 
 static int
-phonebook_search(PhoneBook phonebook, int id)
+phonebook_search(PhoneBook phonebook, unsigned id)
 {
   for (int i = 0; i < phonebook.count; i++) {
     if (phonebook.contacts[i].id == id) {
@@ -61,7 +61,7 @@ phonebook_search(PhoneBook phonebook, int id)
 }
 
 void
-phonebook_edit(PhoneBook* phonebook, int id)
+phonebook_edit(PhoneBook* phonebook, unsigned id)
 {
   int index = phonebook_search(*phonebook, id);
   if (index != -1)
@@ -71,7 +71,7 @@ phonebook_edit(PhoneBook* phonebook, int id)
 }
 
 void
-phonebook_remove(PhoneBook* phonebook, int id)
+phonebook_remove(PhoneBook* phonebook, unsigned id)
 {
   int index = phonebook_search(*phonebook, id);
   if (index != -1) {

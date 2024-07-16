@@ -1,6 +1,8 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
+#include <stdbool.h>
+
 #define MAX_LEN 256
 
 typedef struct
@@ -41,6 +43,9 @@ is_integer(const char* str);
 
 bool
 is_double(const char* str);
+
+InputResult
+input_unsigned();
 
 InputResult
 input_integer();
