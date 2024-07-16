@@ -1,41 +1,46 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "calculator.h"
 #include "main.h"
 
+typedef double (*operation)(double, double);
+
 int
 main(int argc, char* argv[])
 {
+  CommandEntry commands[] = { { "+", add },
+                              { "-", subtract },
+                              { "*", multiply },
+                              { "/", divide },
+                              { NULL, NULL } };
+
   char action_choice;
   while ((action_choice = calculator_menu()) != 'q') {
-    double x, y, result;
+    InputResult x, y;
+    double result;
 
-    fputs("Input x: ", stdout);
-    x = input_double();
-    fputs("Input x: ", stdout);
-    y = input_double();
+    int i = 0;
+    while (commands[i].name != NULL) {
+      if (strcmp(commands[i].name, &action_choice) == 0) {
+        fputs("Input x: ", stdout);
+        if ((x = input_double()).success == false)
+          continue;
+        fputs("Input y: ", stdout);
+        if ((y = input_double()).success == false)
+          continue;
 
-    switch (action_choice) {
-      case '+':
-        result = add(x, y);
-        break;
-      case '-':
-        result = subtract(x, y);
-        break;
-      case '*':
-        result = multiply(x, y);
-        break;
-      case '/':
-        result = divide(x, y);
-        break;
-      default:
-        puts("Invalid choice of action");
+        result = ((operation)commands[i].property)((*(double*)x.value),
+                                                   (*(double*)y.value));
+
+        printf("Result: %lf\n", result);
+      }
+      i++;
     }
-
-    printf("Result: %lf\n", result);
   }
+
   return EXIT_SUCCESS;
 }
 
