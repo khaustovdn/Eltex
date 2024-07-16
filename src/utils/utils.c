@@ -50,33 +50,112 @@ output_wrapped_title(char* wrapped_title)
   free(wrapped_title);
 }
 
-int
+bool
+is_digit(char ch)
+{
+  return (ch >= '0' && ch <= '9');
+}
+
+bool
+is_unsigned(const char* str)
+{
+  int i = 0;
+  while (str[i] != '\0' && i < MAX_LEN) {
+    if (!is_digit(str[i])) {
+      return false;
+    }
+    i++;
+  }
+  return true;
+}
+
+bool
+is_integer(const char* str)
+{
+  if (*str == '-') {
+    char* substr = (char*)malloc(MAX_LEN * sizeof(char));
+    if (substr == NULL) {
+      fprintf(stderr, "Error: Memory allocation failed.\n");
+      exit(EXIT_FAILURE);
+    }
+
+    strncpy(substr, str + 1, MAX_LEN);
+    return is_unsigned(substr);
+  }
+  return is_unsigned(str);
+}
+
+bool
+is_double(const char* str)
+{
+  char* temp = strdup(str);
+  char* token = strtok(temp, ".");
+  if (token == NULL) {
+    return false;
+  }
+  if (!is_integer(token)) {
+    return false;
+  }
+  token = strtok(NULL, ".");
+  if (token != NULL && !is_unsigned(token)) {
+    return false;
+  }
+  return true;
+}
+
+InputResult
 input_integer()
 {
-  char* string = input_string();
-  int result;
-  if (sscanf(string, "%d", &result) != 1) {
-    fprintf(stderr, "Error: Invalid input. Please enter a valid integer.\n");
-    free(string);
-    return -1;
+  InputResult result;
+  {
+    result.value = malloc(sizeof(int));
+    result.success = false;
   }
 
-  free(string);
+  char* str = input_string();
+  if (is_integer(str) == false) {
+    puts("Error: Invalid input. Please enter a valid integer.");
+    free(str);
+    free(result.value);
+    return result;
+  }
+  if (sscanf(str, "%d", (int*)result.value) != 1) {
+    fprintf(stderr, "Error: Invalid input. Please enter a valid integer.\n");
+    free(str);
+    free(result.value);
+    return result;
+  }
+
+  free(str);
+  result.success = true;
   return result;
 }
 
-double
+InputResult
 input_double()
 {
-  char* string = input_string();
-  double result;
-  if (sscanf(string, "%lf", &result) != 1) {
-    fprintf(stderr, "Error: Invalid input. Please enter a valid double.\n");
-    free(string);
-    return -1;
+  InputResult result;
+  {
+    result.value = malloc(sizeof(double));
+    result.success = false;
   }
 
-  free(string);
+  char* str = input_string();
+  if (is_double(str) == false) {
+    puts("Error: Invalid input. Please enter a valid double.");
+    free(str);
+    free(result.value);
+    return result;
+  }
+  if (sscanf(str, "%lf", (double*)result.value) != 1) {
+    fprintf(stderr, "Error: Invalid input. Please enter a valid double.\n");
+    free(str);
+    free(result.value);
+    return result;
+  }
+
+  free(str);
+  result.success = true;
   return result;
 }
 

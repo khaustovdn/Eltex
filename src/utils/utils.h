@@ -11,6 +11,12 @@ typedef struct
 
 typedef struct
 {
+  void* value;
+  bool success;
+} InputResult;
+
+typedef struct
+{
   const char* name;
   Variable* property;
 } CommandEntry;
@@ -24,10 +30,22 @@ create_wrapped_title(const char* title, int width, char symbol);
 void
 output_wrapped_title(char* wrapped_title);
 
-int
+bool
+is_digit(char ch);
+
+bool
+is_unsigned(const char* str);
+
+bool
+is_integer(const char* str);
+
+bool
+is_double(const char* str);
+
+InputResult
 input_integer();
 
-double
+InputResult
 input_double();
 
 char*
