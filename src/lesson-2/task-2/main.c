@@ -17,14 +17,14 @@ main(int argc, char* argv[])
                               { "/", divide },
                               { NULL, NULL } };
 
-  char action_choice;
-  while ((action_choice = calculator_menu()) != 'q') {
+  char* action_choice;
+  while (strncmp((action_choice = calculator_menu()), "q", MAX_LEN) != 0) {
     InputResult x, y;
     double result;
-
+    
     int i = 0;
     while (commands[i].name != NULL) {
-      if (strcmp(commands[i].name, &action_choice) == 0) {
+      if (strncmp(commands[i].name, action_choice, MAX_LEN) == 0) {
         fputs("Input x: ", stdout);
         if ((x = input_double()).success == false)
           continue;
@@ -40,12 +40,14 @@ main(int argc, char* argv[])
       }
       i++;
     }
+    if (commands[i].name == NULL)
+      puts("Invalid choice of action");
   }
 
   return EXIT_SUCCESS;
 }
 
-char
+char*
 calculator_menu()
 {
   char* wrapped_title = create_wrapped_title("Calcualtor Menu", 50, '-');
@@ -54,5 +56,5 @@ calculator_menu()
   fputs("Choose an action:\n\t+) Addition\n\t-) Subtraction\n\t"
         "*) Multiplication\n\t/) Division\n\tq) Quite\nInput: ",
         stdout);
-  return input_char();
+  return input_string();
 }

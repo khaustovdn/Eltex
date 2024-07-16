@@ -7,7 +7,7 @@
 int
 main(int argc, char *argv[]);
 
-char
+char*
 calculator_menu();
 
 #endif // MAIN_H_
