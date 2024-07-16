@@ -7,6 +7,6 @@ int
 main(int args, char *argv[]);
 
 char*
-permission_manager_menu();
+permissions_menu();
 
 #endif // MAIN_H_

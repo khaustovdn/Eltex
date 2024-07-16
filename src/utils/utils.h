@@ -26,11 +26,8 @@ typedef struct
 Variable*
 variable_construct(Variable* property, const char* name);
 
-char*
-create_wrapped_title(const char* title, int width, char symbol);
-
 void
-output_wrapped_title(char* wrapped_title);
+output_wrapped_title(const char* title, int width, char symbol);
 
 bool
 is_digit(char ch);
@@ -55,8 +52,5 @@ input_double();
 
 char*
 input_string();
-
-char
-input_char();
 
 #endif // UTILS_H_

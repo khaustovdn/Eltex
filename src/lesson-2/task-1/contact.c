@@ -27,12 +27,6 @@ contact_fill_required_properties(Contact* contact)
 void
 contact_fill_optional_properties(Contact* contact)
 {
-  char* action_choice = (char*)malloc(MAX_LEN * sizeof(char));
-  if (action_choice == NULL) {
-    fprintf(stderr, "Error: Memory allocation failed.\n");
-    exit(EXIT_FAILURE);
-  }
-
   CommandEntry commands[] = {
     { "ip", DECLARE_VARIABLE(contact->initials.patronymic) },
     { "jt", DECLARE_VARIABLE(contact->job_title) },
@@ -47,22 +41,41 @@ contact_fill_optional_properties(Contact* contact)
     { NULL, NULL }
   };
 
-  while (strcmp(strncpy(action_choice, contact_menu(), MAX_LEN), "q") != 0) {
+  char* action_choice = (char*)malloc(MAX_LEN * sizeof(char));
+  if (action_choice == NULL) {
+    fprintf(stderr, "Error: Memory allocation failed.\n");
+    exit(EXIT_FAILURE);
+  }
+
+  while (strncmp((action_choice = contact_menu()), "q", MAX_LEN) != 0) {
     int i = 0;
-    while (commands[i].name != NULL) {
-      if (strcmp(action_choice, commands[i].name) == 0) {
+    for (;commands[i].name != NULL; i++)
+      if (strncmp(action_choice, commands[i].name, MAX_LEN) == 0) {
         contact_fill_property(commands[i].property);
         break;
       }
-      i++;
-    }
-
-    if (commands[i].name == NULL) {
+    if (commands[i].name == NULL)
       puts("Invalid choice of action");
-    }
   }
 
   free(action_choice);
+}
+
+char*
+contact_menu()
+{
+  output_wrapped_title("Contact Menu", 50, '-');
+
+  fputs("Do you want to set it up:\n\tip. Patronymic\n\t"
+        "jt. Job Title\n\tpow. Place of Work\n\t"
+        "mpn. Mobile Phone Number\n\thpn Home Phone "
+        "Number\n\twpn. Work Phone Number\n\tea. "
+        "E-Mail Address\n\tvksn. VK Social Network\n\tytsn. "
+        "YouTube Social Network\n\ttgsn. Telegram "
+        "Social Network\n\tq. Quit\nInput: ",
+        stdout);
+
+  return input_string();
 }
 
 Contact*
@@ -82,26 +95,6 @@ contact_construct()
   return contact;
 }
 
-const char*
-contact_menu()
-{
-  char* wrapped_title = create_wrapped_title("Contact Menu", 50, '-');
-  output_wrapped_title(wrapped_title);
-
-  fputs("Do you want to set it up:\n\tip. "
-        "Patronymic\n\t"
-        "jt. Job Title\n\tpow. Place of Work\n\t"
-        "mpn. Mobile Phone Number\n\thpn Home Phone "
-        "Number\n\twpn. Work Phone Number\n\tea. "
-        "E-Mail "
-        "Address\n\tvksn. VK Social Network\n\tytsn. "
-        "YouTube Social Network\n\ttgsn. Telegram "
-        "Social Network\n\tq. Quit\nInput: ",
-        stdout);
-  
-  return input_string();
-}
-
 void
 contact_print(Contact contact)
 {
@@ -119,8 +112,7 @@ contact_print(Contact contact)
                              &contact.social_network.telegram,
                              NULL };
 
-  char* wrapped_title = create_wrapped_title("Item", 30, '-');
-  output_wrapped_title(wrapped_title);
+  output_wrapped_title("Item", 30, '-');
 
   printf("id: %d\n", contact.id);
   for (int i = 0; properties[i] != NULL; i++) {

@@ -44,11 +44,11 @@ contact_fill_required_properties(Contact* contact);
 void
 contact_fill_optional_properties(Contact* contact);
 
+char*
+contact_menu();
+
 Contact*
 contact_construct();
-
-const char*
-contact_menu();
 
 void
 contact_print(Contact contact);

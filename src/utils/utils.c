@@ -12,19 +12,21 @@ variable_construct(Variable* property, const char* name)
   return property;
 }
 
-char*
-create_wrapped_title(const char* title, int width, char symbol)
+void
+output_wrapped_title(const char* title, int width, char symbol)
 {
   if (width < strlen(title)) {
-    fputs("Error: Width is too small for the title", stdout);
-    return NULL;
+    fputs("Warning: Width is too small for the title", stdout);
+    return;
   }
   size_t wrap_width = (width - strlen(title)) >> 1;
 
   char* result = (char*)malloc((width + 1) * sizeof(char));
   if (result == NULL) {
-    fputs("Error: Failed to allocate memory", stdout);
-    return NULL;
+    fprintf(stderr,
+            "Error: Unable to allocate memory "
+            "for wrapped title.\n");
+    exit(EXIT_FAILURE);
   }
 
   memset(result, symbol, width);
@@ -33,20 +35,8 @@ create_wrapped_title(const char* title, int width, char symbol)
   for (int i = 0; i < strlen(title); i++)
     result[i + wrap_width] = title[i];
 
-  puts("");
-
-  return result;
-}
-
-void
-output_wrapped_title(char* wrapped_title)
-{
-  if (wrapped_title == NULL) {
-    fprintf(stderr, "Error: Memory allocation failed.\n");
-    exit(EXIT_FAILURE);
-  }
-  puts(wrapped_title);
-  free(wrapped_title);
+  printf("\n%s\n", result);
+  free(result);
 }
 
 bool
@@ -119,7 +109,8 @@ input_unsigned()
     return result;
   }
   if (sscanf(str, "%u", (unsigned*)result.value) != 1) {
-    fprintf(stderr, "Error: Invalid input. Please enter a valid unsigned integer.\n");
+    fprintf(stderr,
+            "Error: Invalid input. Please enter a valid unsigned integer.\n");
     free(str);
     free(result.value);
     return result;
@@ -207,20 +198,6 @@ input_string()
            "truncated.\n");
     while ((c = fgetc(stdin)) != '\n' && c != EOF)
       ;
-  }
-  return result;
-}
-
-char
-input_char()
-{
-  char result = fgetc(stdin);
-  int i = 0;
-  while (fgetc(stdin) != '\n')
-    i++;
-  if (i > 0) {
-    puts("Warning: Input exceeds the maximum length.");
-    return '\0';
   }
   return result;
 }
