@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 
 #include "converter.h"
@@ -33,6 +32,26 @@ convert_mode_to_binary(mode_t mode)
 
   for (int i = 0; i < 9; ++i)
     result[i] = ((mode >> (8 - i)) & 1) ? '1' : '0';
+  result[9] = '\0';
+
+  return result;
+}
+
+char*
+convert_mode_to_letters(mode_t mode) {
+  char* result = malloc(MAX_LEN * sizeof(char));
+  if (result == NULL) {
+    fprintf(stderr, "Error: Memory allocation failed.\n");
+    exit(EXIT_FAILURE);
+  }
+
+  for (int i = 0; i < 9; ++i) {
+    if ((mode >> (8 - i)) & 1) {
+      result[i] = (i % 3 == 0) ? 'r' : (i % 3 == 1) ? 'w' : 'x';
+    } else {
+      result[i] = '-';
+    }
+  }
   result[9] = '\0';
 
   return result;
