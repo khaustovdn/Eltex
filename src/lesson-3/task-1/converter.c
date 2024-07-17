@@ -10,6 +10,7 @@ mode_t
 convert_permissions_to_mode(const char* permissions)
 {
   mode_t mode = 0;
+  printf("hola\n");
 
   for (int i = 0; i < strlen(permissions); i += 3)
     mode = (mode << 3) | ((permissions[i] == 'r') << 2) |
@@ -82,7 +83,7 @@ converter_from_letter_to_bit_format(
 }
 
 char*
-converter_from_letter_to_numerical_format(
+converter_from_letter_to_numeric_format(
   const char* permissions)
 {
   mode_t mode = convert_permissions_to_mode(permissions);

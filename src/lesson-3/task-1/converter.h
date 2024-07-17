@@ -12,7 +12,7 @@ converter_from_letter_to_bit_format(
   const char* permissions);
 
 char*
-converter_from_letter_to_numerical_format(
+converter_from_letter_to_numeric_format(
   const char* permissions);
 
 #endif // CONVERTER_H_

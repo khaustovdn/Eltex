@@ -25,6 +25,9 @@ void
 permissions_output(const char* permissions);
 
 static void
+permissions_output_in_letter_format(const char* permissions);
+
+static void
 permissions_output_in_numeric_format(const char* permissions);
 
 static void

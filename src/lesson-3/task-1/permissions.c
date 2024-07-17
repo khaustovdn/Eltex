@@ -103,6 +103,7 @@ permissions_output_menu()
   output_wrapped_title("Permissions Output Menu", 30, '-');
 
   fputs("Choose an input option:\n"
+        "\tol. Output in Letter Format\n"
         "\ton. Output in Numeric Format\n"
         "\tob. Output in Bit Format\n"
         "Input: ",
@@ -114,6 +115,7 @@ void
 permissions_output(const char* permissions)
 {
   CommandEntry commands[] = {
+    { "ol", permissions_output_in_letter_format },
     { "on", permissions_output_in_numeric_format },
     { "ob", permissions_output_in_bit_format },
     { NULL, NULL }
@@ -145,6 +147,12 @@ permissions_output(const char* permissions)
 }
 
 static void
+permissions_output_in_letter_format(const char* permissions)
+{
+  printf("%s\n", permissions);
+}
+
+static void
 permissions_output_in_numeric_format(const char* permissions)
 {
   char* result =
@@ -153,7 +161,7 @@ permissions_output_in_numeric_format(const char* permissions)
     fprintf(stderr, "Error: Memory allocation failed.\n");
     exit(EXIT_FAILURE);
   }
-  result = converter_from_letter_to_numerical_format(permissions);
+  result = converter_from_letter_to_numeric_format(permissions);
   printf("%s\n", result);
   free(result);
 }
