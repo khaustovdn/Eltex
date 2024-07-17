@@ -4,7 +4,7 @@
 #include "../../utils/utils.h"
 
 int
-main(int args, char *argv[]);
+main(int args, char* argv[]);
 
 char*
 permissions_manager_menu();

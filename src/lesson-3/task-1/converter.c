@@ -12,8 +12,7 @@ convert_permissions_to_mode(const char* permissions)
   mode_t mode = 0;
 
   for (int i = 0; i < strlen(permissions); i += 3)
-    mode = (mode << 3) |
-           ((permissions[i] == 'r') << 2) |
+    mode = (mode << 3) | ((permissions[i] == 'r') << 2) |
            ((permissions[i + 1] == 'w') << 1) |
            (permissions[i + 2] == 'x');
 
@@ -38,7 +37,8 @@ convert_mode_to_binary(mode_t mode)
 }
 
 char*
-convert_mode_to_letters(mode_t mode) {
+convert_mode_to_letters(mode_t mode)
+{
   char* result = malloc(MAX_LEN * sizeof(char));
   if (result == NULL) {
     fprintf(stderr, "Error: Memory allocation failed.\n");
@@ -47,7 +47,8 @@ convert_mode_to_letters(mode_t mode) {
 
   for (int i = 0; i < 9; ++i) {
     if ((mode >> (8 - i)) & 1) {
-      result[i] = (i % 3 == 0) ? 'r' : (i % 3 == 1) ? 'w' : 'x';
+      result[i] =
+        (i % 3 == 0) ? 'r' : (i % 3 == 1) ? 'w' : 'x';
     } else {
       result[i] = '-';
     }
@@ -73,14 +74,16 @@ convert_mode_to_octal(mode_t mode)
 }
 
 char*
-converter_from_letter_to_binary_format(const char* permissions)
+converter_from_letter_to_binary_format(
+  const char* permissions)
 {
   mode_t mode = convert_permissions_to_mode(permissions);
   return convert_mode_to_binary(mode);
 }
 
 char*
-converter_from_letter_to_numerical_format(const char* permissions)
+converter_from_letter_to_numerical_format(
+  const char* permissions)
 {
   mode_t mode = convert_permissions_to_mode(permissions);
   return convert_mode_to_octal(mode);

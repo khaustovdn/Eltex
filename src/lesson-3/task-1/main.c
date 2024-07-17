@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "permissions.h"
 #include "main.h"
+#include "permissions.h"
 
 int
 main(int argc, char* argv[])
@@ -12,11 +12,12 @@ main(int argc, char* argv[])
   CommandEntry permissions_commands[] = {
     { "fp", NULL },
     { "ip", permissions_input },
-    { "op",  },
+    { "op", NULL },
     { NULL, NULL }
   };
 
-  char* action_choice = (char*)malloc(MAX_LEN * sizeof(char));
+  char* action_choice =
+    (char*)malloc(MAX_LEN * sizeof(char));
   if (action_choice == NULL) {
     fprintf(stderr, "Error: Memory allocation failed.\n");
     exit(EXIT_FAILURE);
@@ -28,11 +29,17 @@ main(int argc, char* argv[])
     exit(EXIT_FAILURE);
   }
 
-  while (strncmp((action_choice = permissions_manager_menu()), "q", MAX_LEN) != 0) {
+  while (
+    strncmp((action_choice = permissions_manager_menu()),
+            "q",
+            MAX_LEN) != 0) {
     int i = 0;
     for (; permissions_commands[i].name != NULL; i++) {
-      if (strncmp(permissions_commands[i].name, action_choice, MAX_LEN) == 0) {
-        ((action)permissions_commands[i].property)(permissions);
+      if (strncmp(permissions_commands[i].name,
+                  action_choice,
+                  MAX_LEN) == 0) {
+        ((action)permissions_commands[i].property)(
+          permissions);
         break;
       }
     }
