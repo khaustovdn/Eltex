@@ -20,7 +20,7 @@ convert_permissions_to_mode(const char* permissions)
 }
 
 char*
-convert_mode_to_binary(mode_t mode)
+convert_mode_to_bit(mode_t mode)
 {
   char* result = (char*)malloc(MAX_LEN * sizeof(char));
 
@@ -74,11 +74,11 @@ convert_mode_to_octal(mode_t mode)
 }
 
 char*
-converter_from_letter_to_binary_format(
+converter_from_letter_to_bit_format(
   const char* permissions)
 {
   mode_t mode = convert_permissions_to_mode(permissions);
-  return convert_mode_to_binary(mode);
+  return convert_mode_to_bit(mode);
 }
 
 char*

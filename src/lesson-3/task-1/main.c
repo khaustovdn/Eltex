@@ -12,7 +12,7 @@ main(int argc, char* argv[])
   CommandEntry permissions_commands[] = {
     { "fp", NULL },
     { "ip", permissions_input },
-    { "op", NULL },
+    { "op", permissions_output },
     { NULL, NULL }
   };
 

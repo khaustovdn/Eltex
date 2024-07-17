@@ -8,7 +8,7 @@ char*
 convert_mode_to_letters(mode_t mode);
 
 char*
-converter_from_letter_to_binary_format(
+converter_from_letter_to_bit_format(
   const char* permissions);
 
 char*
