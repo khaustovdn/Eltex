@@ -41,11 +41,7 @@ contact_fill_optional_properties(Contact* contact)
     { NULL, NULL }
   };
 
-  char* action_choice = (char*)malloc(MAX_LEN * sizeof(char));
-  if (action_choice == NULL) {
-    fprintf(stderr, "Error: Memory allocation failed.\n");
-    exit(EXIT_FAILURE);
-  }
+  char* action_choice;
 
   while (strncmp((action_choice = contact_menu()), "q", MAX_LEN) != 0) {
     int i = 0;

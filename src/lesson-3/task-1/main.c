@@ -6,11 +6,12 @@
 #include "main.h"
 #include "permissions.h"
 
+typedef void (*action)(mode_t*);
+
 int
 main(int argc, char* argv[])
 {
   CommandEntry permissions_commands[] = {
-    { "fp", NULL },
     { "ip", permissions_input },
     { "op", permissions_output },
     { NULL, NULL }
@@ -23,12 +24,7 @@ main(int argc, char* argv[])
     exit(EXIT_FAILURE);
   }
 
-  char* permissions = (char*)malloc(MAX_LEN * sizeof(char));
-  if (permissions == NULL) {
-    fprintf(stderr, "Error: Memory allocation failed.\n");
-    exit(EXIT_FAILURE);
-  }
-
+  mode_t mode = 0;
   while (
     strncmp((action_choice = permissions_manager_menu()),
             "q",
@@ -39,7 +35,7 @@ main(int argc, char* argv[])
                   action_choice,
                   MAX_LEN) == 0) {
         ((action)permissions_commands[i].property)(
-          permissions);
+          &mode);
         break;
       }
     }
@@ -49,7 +45,6 @@ main(int argc, char* argv[])
   }
 
   free(action_choice);
-  free(permissions);
 
   return EXIT_SUCCESS;
 }
@@ -59,8 +54,7 @@ permissions_manager_menu()
 {
   output_wrapped_title("Permission Manager Menu", 50, '-');
 
-  fputs("Choose an action:\n\tfp. Get File "
-        "Permissions\n\tip. Input Permissions\n\t"
+  fputs("Choose an action:\n\tip. Input Permissions\n\t"
         "op. Output Permissions\n\tq.Quit\nInput: ",
         stdout);
   return input_string();

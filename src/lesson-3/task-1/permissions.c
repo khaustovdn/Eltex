@@ -11,31 +11,25 @@ permissions_input_menu()
 {
   output_wrapped_title("Permissions Input Menu", 30, '-');
 
-  fputs("Choose an input option:\n"
+  fputs("Choose an input variant:\n"
         "\til. Input in Letter Format\n"
-        "\tin. Input in Numeric Format\n"
+        "\tio. Input in Octal Format\n"
+        "\tq. Quit\n"
         "Input: ",
         stdout);
   return input_string();
 }
 
 void
-permissions_input(const char* permissions)
+permissions_input(mode_t* mode)
 {
   CommandEntry commands[] = {
     { "il", permissions_input_in_letter_format },
-    { "in", permissions_input_in_numeric_format },
+    { "io", permissions_input_in_octal_format },
     { NULL, NULL }
   };
 
-  char* action_choice = malloc(MAX_LEN * sizeof(char));
-  if (action_choice == NULL) {
-    fprintf(stderr, "Error: Memory allocation failed.\n");
-    exit(EXIT_FAILURE);
-  }
-
-  fputs("Input permissions: ", stdout);
-  strncpy((char*)permissions, input_string(), MAX_LEN);
+  char* action_choice;
 
   if (strncmp((action_choice = permissions_input_menu()),
               "q",
@@ -44,8 +38,16 @@ permissions_input(const char* permissions)
 
   int i = 0;
   for (; commands[i].name != NULL; i++)
-    if (strncmp(action_choice, commands[i].name, MAX_LEN) == 0) {
-      ((action)commands[i].property)(permissions);
+    if (strncmp(action_choice, commands[i].name, MAX_LEN) ==
+        0) {
+      InputResult res_mode =
+        ((input_action)commands[i].property)();
+      if (res_mode.success == false) {
+        puts("Warning: an attempt to enter permits was "
+             "unsuccessful");
+        break;
+      }
+      *mode = *(mode_t*)res_mode.value;
       break;
     }
   if (commands[i].name == NULL)
@@ -54,47 +56,97 @@ permissions_input(const char* permissions)
   free(action_choice);
 }
 
-static void
-permissions_input_in_letter_format(const char* permissions)
+static InputResult
+permissions_input_in_letter_format()
 {
-  if (strlen(permissions) != 9) {
+  InputResult result;
+  {
+    result.value = malloc(sizeof(mode_t));
+    if (result.value == NULL) {
+      fprintf(stderr, "Error: Memory allocation failed.\n");
+      exit(EXIT_FAILURE);
+    }
+    result.success = false;
+  }
+
+  fputs("Input permissions in letter format (rwxrwxrwx): ",
+        stdout);
+
+  char* str_mode = input_string();
+
+  if (strlen(str_mode) != 9) {
     puts("Error: invalid permissions string size");
-    return;
+    free(str_mode);
+    free(result.value);
+    return result;
   }
 
   for (int i = 0; i < 9; i += 3) {
-    if ((permissions[i] != 'r' &&
-         permissions[i] != '-') ||
-        (permissions[i + 1] != 'w' &&
-         permissions[i + 1] != '-') ||
-        (permissions[i + 2] != 'x' &&
-         permissions[i + 2] != '-')) {
+    if ((str_mode[i] != 'r' && str_mode[i] != '-') ||
+        (str_mode[i + 1] != 'w' &&
+         str_mode[i + 1] != '-') ||
+        (str_mode[i + 2] != 'x' &&
+         str_mode[i + 2] != '-')) {
       puts("Error: invalid permissions format");
-      return;
+      free(str_mode);
+      free(result.value);
+      return result;
     }
   }
+
+  *(mode_t*)result.value =
+    convert_permissions_to_mode(str_mode);
+  result.success = true;
+
+  free(str_mode);
+  return result;
 }
 
-static void
-permissions_input_in_numeric_format(
-  const char* permissions)
+static InputResult
+permissions_input_in_octal_format()
 {
-  if (strlen(permissions) != 3) {
-    puts("Error: invalid permissions string size");
-    return;
+  InputResult result;
+  {
+    result.value = malloc(sizeof(mode_t));
+    if (result.value == NULL) {
+      fprintf(stderr, "Error: Memory allocation failed.\n");
+      exit(EXIT_FAILURE);
+    }
+    result.success = false;
   }
 
-  for (int i = 0; i < strlen(permissions); i++) {
-    if (permissions[i] < '0' || permissions[i] > '7') {
+  fputs("Input permissions in octal format (777): ",
+        stdout);
+
+  InputResult str_mode;
+  if ((str_mode = input_unsigned()).success == false) {
+    free(str_mode.value);
+    free(result.value);
+    return result;
+  }
+
+  if (strlen(str_mode.value) != 3) {
+    puts("Error: invalid permissions string size");
+    free(str_mode.value);
+    free(result.value);
+    return result;
+  }
+
+  for (int i = 0; i < strlen(str_mode.value); i++) {
+    if (((char*)str_mode.value)[i] < '0' ||
+        ((char*)str_mode.value)[i] > '7') {
       puts("Error: invalid permissions string format");
-      return;
+      free(str_mode.value);
+      free(result.value);
+      return result;
     }
   }
 
-  strncpy(
-    (char*)permissions,
-    convert_mode_to_letters(strtol(permissions, NULL, 8)),
-    MAX_LEN);
+  *(mode_t*)result.value = strtol(str_mode.value, NULL, 8);
+  result.success = true;
+
+  free(str_mode.value);
+  return result;
 }
 
 char*
@@ -104,29 +156,25 @@ permissions_output_menu()
 
   fputs("Choose an input option:\n"
         "\tol. Output in Letter Format\n"
-        "\ton. Output in Numeric Format\n"
+        "\too. Output in Octal Format\n"
         "\tob. Output in Bit Format\n"
+        "\tq. Quit\n"
         "Input: ",
         stdout);
   return input_string();
 }
 
 void
-permissions_output(const char* permissions)
+permissions_output(mode_t* mode)
 {
   CommandEntry commands[] = {
     { "ol", permissions_output_in_letter_format },
-    { "on", permissions_output_in_numeric_format },
+    { "oo", permissions_output_in_octal_format },
     { "ob", permissions_output_in_bit_format },
     { NULL, NULL }
   };
 
-  char* action_choice =
-    (char*)malloc(MAX_LEN * sizeof(char));
-  if (action_choice == NULL) {
-    fprintf(stderr, "Error: Memory allocation failed.\n");
-    exit(EXIT_FAILURE);
-  }
+  char* action_choice;
 
   if (strncmp((action_choice = permissions_output_menu()),
               "q",
@@ -137,7 +185,7 @@ permissions_output(const char* permissions)
   for (; commands[i].name != NULL; i++)
     if (strncmp(action_choice, commands[i].name, MAX_LEN) ==
         0) {
-      ((action)commands[i].property)(permissions);
+      ((output_action)commands[i].property)(*mode);
       break;
     }
   if (commands[i].name == NULL)
@@ -147,36 +195,19 @@ permissions_output(const char* permissions)
 }
 
 static void
-permissions_output_in_letter_format(const char* permissions)
+permissions_output_in_letter_format(mode_t mode)
 {
-  printf("%s\n", permissions);
+  printf("%s\n", convert_mode_to_letters(mode));
 }
 
 static void
-permissions_output_in_numeric_format(const char* permissions)
+permissions_output_in_octal_format(mode_t mode)
 {
-  char* result =
-    (char*)malloc(MAX_LEN * sizeof(char));
-  if (result == NULL) {
-    fprintf(stderr, "Error: Memory allocation failed.\n");
-    exit(EXIT_FAILURE);
-  }
-  result = converter_from_letter_to_numeric_format(permissions);
-  printf("%s\n", result);
-  free(result);
+  printf("%s\n", convert_mode_to_octal(mode));
 }
 
 static void
-permissions_output_in_bit_format(
-  const char* permissions)
+permissions_output_in_bit_format(mode_t mode)
 {
-  char* result =
-    (char*)malloc(MAX_LEN * sizeof(char));
-  if (result == NULL) {
-    fprintf(stderr, "Error: Memory allocation failed.\n");
-    exit(EXIT_FAILURE);
-  }
-  result = converter_from_letter_to_bit_format(permissions);
-  printf("%s\n", result);
-  free(result);
+  printf("%s\n", convert_mode_to_bit(mode));
 }

@@ -27,7 +27,9 @@ Variable*
 variable_construct(Variable* property, const char* name);
 
 void
-output_wrapped_title(const char* title, int width, char symbol);
+output_wrapped_title(const char* title,
+                     int width,
+                     char symbol);
 
 bool
 is_digit(char ch);

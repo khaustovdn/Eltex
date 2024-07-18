@@ -13,10 +13,13 @@ variable_construct(Variable* property, const char* name)
 }
 
 void
-output_wrapped_title(const char* title, int width, char symbol)
+output_wrapped_title(const char* title,
+                     int width,
+                     char symbol)
 {
   if (width < strlen(title)) {
-    fputs("Warning: Width is too small for the title", stdout);
+    fputs("Warning: Width is too small for the title",
+          stdout);
     return;
   }
   size_t wrap_width = (width - strlen(title)) >> 1;
@@ -98,19 +101,25 @@ input_unsigned()
   InputResult result;
   {
     result.value = malloc(sizeof(unsigned));
+    if (result.value == NULL) {
+      fprintf(stderr, "Error: Memory allocation failed.\n");
+      exit(EXIT_FAILURE);
+    }
     result.success = false;
   }
 
   char* str = input_string();
   if (is_unsigned(str) == false) {
-    puts("Error: Invalid input. Please enter a valid unsigned integer.");
+    puts("Error: Invalid input. Please enter a valid "
+         "unsigned integer.");
     free(str);
     free(result.value);
     return result;
   }
   if (sscanf(str, "%u", (unsigned*)result.value) != 1) {
     fprintf(stderr,
-            "Error: Invalid input. Please enter a valid unsigned integer.\n");
+            "Error: Invalid input. Please enter a valid "
+            "unsigned integer.\n");
     free(str);
     free(result.value);
     return result;
@@ -127,18 +136,25 @@ input_integer()
   InputResult result;
   {
     result.value = malloc(sizeof(int));
+    if (result.value == NULL) {
+      fprintf(stderr, "Error: Memory allocation failed.\n");
+      exit(EXIT_FAILURE);
+    }
     result.success = false;
   }
 
   char* str = input_string();
   if (is_integer(str) == false) {
-    puts("Error: Invalid input. Please enter a valid integer.");
+    puts("Error: Invalid input. Please enter a valid "
+         "integer.");
     free(str);
     free(result.value);
     return result;
   }
   if (sscanf(str, "%d", (int*)result.value) != 1) {
-    fprintf(stderr, "Error: Invalid input. Please enter a valid integer.\n");
+    fprintf(stderr,
+            "Error: Invalid input. Please enter a valid "
+            "integer.\n");
     free(str);
     free(result.value);
     return result;
@@ -155,18 +171,25 @@ input_double()
   InputResult result;
   {
     result.value = malloc(sizeof(double));
+    if (result.value == NULL) {
+      fprintf(stderr, "Error: Memory allocation failed.\n");
+      exit(EXIT_FAILURE);
+    }
     result.success = false;
   }
 
   char* str = input_string();
   if (is_double(str) == false) {
-    puts("Error: Invalid input. Please enter a valid double.");
+    puts(
+      "Error: Invalid input. Please enter a valid double.");
     free(str);
     free(result.value);
     return result;
   }
   if (sscanf(str, "%lf", (double*)result.value) != 1) {
-    fprintf(stderr, "Error: Invalid input. Please enter a valid double.\n");
+    fprintf(stderr,
+            "Error: Invalid input. Please enter a valid "
+            "double.\n");
     free(str);
     free(result.value);
     return result;
@@ -194,7 +217,8 @@ input_string()
   }
   result[i] = '\0';
   if (i == MAX_LEN - 1 && c != '\n') {
-    printf("Warning: Input exceeds the maximum length. It will be "
+    printf("Warning: Input exceeds the maximum length. It "
+           "will be "
            "truncated.\n");
     while ((c = fgetc(stdin)) != '\n' && c != EOF)
       ;

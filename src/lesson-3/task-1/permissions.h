@@ -2,36 +2,37 @@
 #define PERMISSIONS_H_
 
 #include "../../utils/utils.h"
+#include <sys/types.h>
 
-typedef void (*action)(const char* permissions);
+typedef InputResult (*input_action)();
+
+typedef void (*output_action)(mode_t mode);
 
 char*
 permissions_input_menu();
 
 void
-permissions_input(const char* permissions);
+permissions_input(mode_t* mode);
 
-static void
-permissions_input_in_letter_format(const char* permissions);
+static InputResult
+permissions_input_in_letter_format();
 
-static void
-permissions_input_in_numeric_format(
-  const char* permissions);
+static InputResult
+permissions_input_in_octal_format();
 
 char*
 permissions_output_menu();
 
 void
-permissions_output(const char* permissions);
+permissions_output(mode_t* mode);
 
 static void
-permissions_output_in_letter_format(const char* permissions);
+permissions_output_in_letter_format(mode_t mode);
 
 static void
-permissions_output_in_numeric_format(const char* permissions);
+permissions_output_in_octal_format(mode_t mode);
 
 static void
-permissions_output_in_bit_format(
-  const char* permissions);
+permissions_output_in_bit_format(mode_t mode);
 
 #endif // PERMISSIONS_H_

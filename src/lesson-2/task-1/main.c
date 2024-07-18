@@ -16,11 +16,7 @@ main(int argc, char* argv[])
                               { "p", print_contacts },
                               { NULL, NULL } };
 
-  char* action_choice = (char*)malloc(MAX_LEN * sizeof(char));
-  if (action_choice == NULL) {
-    fprintf(stderr, "Error: Memory allocation failed.\n");
-    exit(EXIT_FAILURE);
-  }
+  char* action_choice;
 
   PhoneBook* phonebook = phonebook_constuct();
   while (strncmp((action_choice = phonebook_menu()), "q", MAX_LEN) != 0) {

@@ -7,15 +7,19 @@
 #include "converter.h"
 
 mode_t
-convert_permissions_to_mode(const char* permissions)
+convert_permissions_to_mode(const char* str_mode)
 {
-  mode_t mode = 0;
-  printf("hola\n");
+  if (strlen(str_mode) != 9) {
+    fprintf(stderr, "Error: Invalid permission format.\n");
+    exit(EXIT_FAILURE);
+  }
 
-  for (int i = 0; i < strlen(permissions); i += 3)
-    mode = (mode << 3) | ((permissions[i] == 'r') << 2) |
-           ((permissions[i + 1] == 'w') << 1) |
-           (permissions[i + 2] == 'x');
+  mode_t mode = 0;
+
+  for (int i = 0; i < strlen(str_mode); i += 3)
+    mode = (mode << 3) | ((str_mode[i] == 'r') << 2) |
+           ((str_mode[i + 1] == 'w') << 1) |
+           (str_mode[i + 2] == 'x');
 
   return mode;
 }
@@ -75,17 +79,25 @@ convert_mode_to_octal(mode_t mode)
 }
 
 char*
-converter_from_letter_to_bit_format(
-  const char* permissions)
+convert_from_letter_to_bit_format(const char* str_mode)
 {
-  mode_t mode = convert_permissions_to_mode(permissions);
+  if (strlen(str_mode) != 9) {
+    fprintf(stderr, "Error: Invalid permission format.\n");
+    exit(EXIT_FAILURE);
+  }
+
+  mode_t mode = convert_permissions_to_mode(str_mode);
   return convert_mode_to_bit(mode);
 }
 
 char*
-converter_from_letter_to_numeric_format(
-  const char* permissions)
+convert_from_letter_to_octal_format(const char* str_mode)
 {
-  mode_t mode = convert_permissions_to_mode(permissions);
+  if (strlen(str_mode) != 9) {
+    fprintf(stderr, "Error: Invalid permission format.\n");
+    exit(EXIT_FAILURE);
+  }
+
+  mode_t mode = convert_permissions_to_mode(str_mode);
   return convert_mode_to_octal(mode);
 }
