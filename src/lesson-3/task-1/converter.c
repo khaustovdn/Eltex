@@ -7,9 +7,9 @@
 #include "converter.h"
 
 mode_t
-convert_permissions_to_mode(const char* str_mode)
+converter_permissions_to_mode(const char* str_mode)
 {
-  if (strlen(str_mode) != 9) {
+  if (converter_is_letters(str_mode) == false) {
     fprintf(stderr, "Error: Invalid permission format.\n");
     exit(EXIT_FAILURE);
   }
@@ -25,7 +25,7 @@ convert_permissions_to_mode(const char* str_mode)
 }
 
 char*
-convert_mode_to_bit(mode_t mode)
+converter_mode_to_bit(mode_t mode)
 {
   char* result = (char*)malloc(MAX_LEN * sizeof(char));
 
@@ -42,7 +42,7 @@ convert_mode_to_bit(mode_t mode)
 }
 
 char*
-convert_mode_to_letters(mode_t mode)
+converter_mode_to_letters(mode_t mode)
 {
   char* result = malloc(MAX_LEN * sizeof(char));
   if (result == NULL) {
@@ -64,7 +64,7 @@ convert_mode_to_letters(mode_t mode)
 }
 
 char*
-convert_mode_to_octal(mode_t mode)
+converter_mode_to_octal(mode_t mode)
 {
   char* result = (char*)malloc(MAX_LEN * sizeof(char));
 
@@ -78,26 +78,43 @@ convert_mode_to_octal(mode_t mode)
   return result;
 }
 
-char*
-convert_from_letter_to_bit_format(const char* str_mode)
+bool
+converter_is_letters(const char* str_mode)
 {
   if (strlen(str_mode) != 9) {
-    fprintf(stderr, "Error: Invalid permission format.\n");
-    exit(EXIT_FAILURE);
+    puts("Error: invalid permissions string size");
+    return false;
   }
 
-  mode_t mode = convert_permissions_to_mode(str_mode);
-  return convert_mode_to_bit(mode);
+  for (int i = 0; i < 9; i += 3) {
+    if ((str_mode[i] != 'r' && str_mode[i] != '-') ||
+        (str_mode[i + 1] != 'w' &&
+         str_mode[i + 1] != '-') ||
+        (str_mode[i + 2] != 'x' &&
+         str_mode[i + 2] != '-')) {
+      puts("Error: invalid permissions letters format");
+      return false;
+    }
+  }
+
+  return true;
 }
 
-char*
-convert_from_letter_to_octal_format(const char* str_mode)
+bool
+converter_is_octal(const char* str_mode)
 {
-  if (strlen(str_mode) != 9) {
-    fprintf(stderr, "Error: Invalid permission format.\n");
-    exit(EXIT_FAILURE);
+  if (strlen(str_mode) != 3) {
+    puts("Error: invalid permissions string size");
+    return false;
   }
 
-  mode_t mode = convert_permissions_to_mode(str_mode);
-  return convert_mode_to_octal(mode);
+  for (int i = 0; i < strlen(str_mode); i++) {
+    if (((char*)str_mode)[i] < '0' ||
+        ((char*)str_mode)[i] > '7') {
+      puts("Error: invalid permissions string format");
+      return false;
+    }
+  } 
+
+  return true;
 }

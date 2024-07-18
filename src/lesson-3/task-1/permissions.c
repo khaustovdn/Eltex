@@ -24,8 +24,8 @@ void
 permissions_input(mode_t* mode)
 {
   CommandEntry commands[] = {
-    { "il", permissions_input_in_letter_format },
-    { "io", permissions_input_in_octal_format },
+    { "il", permissions_input_in_letters },
+    { "io", permissions_input_in_octal },
     { NULL, NULL }
   };
 
@@ -57,7 +57,7 @@ permissions_input(mode_t* mode)
 }
 
 static InputResult
-permissions_input_in_letter_format()
+permissions_input_in_letters()
 {
   InputResult result;
   {
@@ -74,28 +74,14 @@ permissions_input_in_letter_format()
 
   char* str_mode = input_string();
 
-  if (strlen(str_mode) != 9) {
-    puts("Error: invalid permissions string size");
+  if (converter_is_letters(str_mode) == false) {
     free(str_mode);
     free(result.value);
     return result;
   }
 
-  for (int i = 0; i < 9; i += 3) {
-    if ((str_mode[i] != 'r' && str_mode[i] != '-') ||
-        (str_mode[i + 1] != 'w' &&
-         str_mode[i + 1] != '-') ||
-        (str_mode[i + 2] != 'x' &&
-         str_mode[i + 2] != '-')) {
-      puts("Error: invalid permissions format");
-      free(str_mode);
-      free(result.value);
-      return result;
-    }
-  }
-
   *(mode_t*)result.value =
-    convert_permissions_to_mode(str_mode);
+    converter_permissions_to_mode(str_mode);
   result.success = true;
 
   free(str_mode);
@@ -103,7 +89,7 @@ permissions_input_in_letter_format()
 }
 
 static InputResult
-permissions_input_in_octal_format()
+permissions_input_in_octal()
 {
   InputResult result;
   {
@@ -118,34 +104,24 @@ permissions_input_in_octal_format()
   fputs("Input permissions in octal format (777): ",
         stdout);
 
-  InputResult str_mode;
-  if ((str_mode = input_unsigned()).success == false) {
-    free(str_mode.value);
+  char* str_mode = input_string();
+
+  if (is_unsigned(str_mode) == false) {
+    free(str_mode);
     free(result.value);
     return result;
   }
 
-  if (strlen(str_mode.value) != 3) {
-    puts("Error: invalid permissions string size");
-    free(str_mode.value);
+  if (converter_is_octal(str_mode) == false) {
+    free(str_mode);
     free(result.value);
     return result;
   }
 
-  for (int i = 0; i < strlen(str_mode.value); i++) {
-    if (((char*)str_mode.value)[i] < '0' ||
-        ((char*)str_mode.value)[i] > '7') {
-      puts("Error: invalid permissions string format");
-      free(str_mode.value);
-      free(result.value);
-      return result;
-    }
-  }
-
-  *(mode_t*)result.value = strtol(str_mode.value, NULL, 8);
+  *(mode_t*)result.value = strtol(str_mode, NULL, 8);
   result.success = true;
 
-  free(str_mode.value);
+  free(str_mode);
   return result;
 }
 
@@ -168,9 +144,9 @@ void
 permissions_output(mode_t* mode)
 {
   CommandEntry commands[] = {
-    { "ol", permissions_output_in_letter_format },
-    { "oo", permissions_output_in_octal_format },
-    { "ob", permissions_output_in_bit_format },
+    { "ol", converter_mode_to_letters },
+    { "oo", converter_mode_to_octal },
+    { "ob", converter_mode_to_bit },
     { NULL, NULL }
   };
 
@@ -185,29 +161,11 @@ permissions_output(mode_t* mode)
   for (; commands[i].name != NULL; i++)
     if (strncmp(action_choice, commands[i].name, MAX_LEN) ==
         0) {
-      ((output_action)commands[i].property)(*mode);
+      printf("\n%s", ((output_action)commands[i].property)(*mode));
       break;
     }
   if (commands[i].name == NULL)
     puts("Invalid choice of action");
 
   free(action_choice);
-}
-
-static void
-permissions_output_in_letter_format(mode_t mode)
-{
-  printf("%s\n", convert_mode_to_letters(mode));
-}
-
-static void
-permissions_output_in_octal_format(mode_t mode)
-{
-  printf("%s\n", convert_mode_to_octal(mode));
-}
-
-static void
-permissions_output_in_bit_format(mode_t mode)
-{
-  printf("%s\n", convert_mode_to_bit(mode));
 }

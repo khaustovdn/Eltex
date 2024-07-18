@@ -5,21 +5,21 @@
 #include <sys/types.h>
 
 mode_t
-convert_permissions_to_mode(const char* str_mode);
+converter_permissions_to_mode(const char* str_mode);
 
 char*
-convert_mode_to_bit(mode_t mode);
+converter_mode_to_bit(mode_t mode);
 
 char*
-convert_mode_to_letters(mode_t mode);
+converter_mode_to_letters(mode_t mode);
 
 char*
-convert_mode_to_octal(mode_t mode);
+converter_mode_to_octal(mode_t mode);
 
-char*
-convert_from_letter_to_bit_format(const char* mode);
+bool
+converter_is_letters(const char* str_mode);
 
-char*
-convert_from_letter_to_octal_format(const char* mode);
+bool
+converter_is_octal(const char* str_mode);
 
 #endif // CONVERTER_H_
