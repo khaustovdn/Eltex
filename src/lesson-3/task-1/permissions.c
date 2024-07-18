@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #include "converter.h"
 #include "permissions.h"
@@ -12,6 +13,7 @@ permissions_input_menu()
   output_wrapped_title("Permissions Input Menu", 30, '-');
 
   fputs("Choose an input variant:\n"
+        "\tif. Input the File name\n"
         "\til. Input in Letter Format\n"
         "\tio. Input in Octal Format\n"
         "\tq. Quit\n"
@@ -24,6 +26,7 @@ void
 permissions_input(mode_t* mode)
 {
   CommandEntry commands[] = {
+    { "if", permissions_input_file_name },
     { "il", permissions_input_in_letters },
     { "io", permissions_input_in_octal },
     { NULL, NULL }
@@ -54,6 +57,43 @@ permissions_input(mode_t* mode)
     puts("Invalid choice of action");
 
   free(action_choice);
+}
+
+static InputResult
+permissions_input_file_name()
+{
+  InputResult result;
+  {
+    result.value = malloc(sizeof(mode_t));
+    if (result.value == NULL) {
+      fprintf(stderr, "Error: Memory allocation failed.\n");
+      exit(EXIT_FAILURE);
+    }
+    result.success = false;
+  }
+
+  fputs("Input the file name: ",
+        stdout);
+
+  char* file_name = input_string();
+  
+  FILE* file = fopen(file_name, "r");
+  if (file == NULL) {
+    puts("Error: File does not exist");
+    free(file_name);
+    free(result.value);
+    return result;
+  }
+
+  struct stat file_stat;
+  stat(file_name, &file_stat);
+
+  *(mode_t*)result.value = file_stat.st_mode;
+  result.success = true;
+
+  free(file_name);
+  fclose(file);
+  return result;
 }
 
 static InputResult

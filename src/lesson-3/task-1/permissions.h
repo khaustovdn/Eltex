@@ -15,6 +15,9 @@ void
 permissions_input(mode_t* mode);
 
 static InputResult
+permissions_input_file_name();
+
+static InputResult
 permissions_input_in_letters();
 
 static InputResult
