@@ -72,7 +72,7 @@ converter_mode_to_octal(mode_t mode)
     exit(EXIT_FAILURE);
   }
 
-  sprintf(result, "0%o\n", mode);
+  sprintf(result, "0%o\n", mode & 0777);
 
   return result;
 }

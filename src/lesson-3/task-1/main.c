@@ -4,7 +4,9 @@
 #include <string.h>
 
 #include "main.h"
-#include "permissions.h"
+#include "permissions_input.h"
+#include "permissions_editor.h"
+#include "permissions_output.h"
 
 typedef void (*action)(mode_t*);
 
@@ -13,6 +15,7 @@ main(int argc, char* argv[])
 {
   CommandEntry permissions_commands[] = {
     { "ip", permissions_input },
+    { "er", permissions_editor },
     { "op", permissions_output },
     { NULL, NULL }
   };
