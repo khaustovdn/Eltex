@@ -13,6 +13,11 @@ void
 permissions_input(mode_t* mode);
 
 static InputResult
+permissions_input_internal(char* prompt,
+                        bool (*is_valid_input)(const char*),
+                        mode_t (*convert_to_mode)(const char*));
+
+static InputResult
 permissions_input_file_name();
 
 static InputResult

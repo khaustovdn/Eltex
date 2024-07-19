@@ -26,6 +26,13 @@ remove_mode(mode_t* mode, mode_t mask)
   *mode &= ~mask;
 }
 
+void
+equal_mode(mode_t* mode, mode_t mask)
+{
+  *mode = (*mode & ~0777) | mask;
+}
+
+
 char*
 permissions_editor_menu()
 {
@@ -91,6 +98,7 @@ apply_mode_change(mode_t* mode, mode_t mask, char sign)
 {
   CommandEntry commands[] = { { "+", add_mode },
                               { "-", remove_mode },
+                              { "~", equal_mode },
                               { NULL, NULL } };
 
   for (int k = 0; commands[k].name != NULL; k++)
@@ -114,17 +122,19 @@ permissions_editor(mode_t* mode)
     sign = '+';
   } else if (strstr(action_choice, "-") != NULL) {
     sign = '-';
+  } else if (strstr(action_choice, "~") != NULL) {
+    sign = '~';
   } else
     return;
 
   mode_t user_group_mask = 0;
   mode_t type_permissions_mask = 0;
 
-  char* user_group_token = strtok(action_choice, "+-");
+  char* user_group_token = strtok(action_choice, "+-~");
   if (user_group_token != NULL) {
     process_user_group(&user_group_mask, user_group_token);
   }
-  char* type_permissions_token = strtok(NULL, "+-");
+  char* type_permissions_token = strtok(NULL, "+-~");
   if (type_permissions_token != NULL) {
     process_type_permissions(&type_permissions_mask,
                              type_permissions_token);

@@ -13,6 +13,9 @@ add_mode(mode_t* mode, mode_t mask);
 void
 remove_mode(mode_t* mode, mode_t mask);
 
+void
+equal_mode(mode_t* mode, mode_t mask);
+
 char*
 permissions_editor_menu();
 

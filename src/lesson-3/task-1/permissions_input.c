@@ -60,6 +60,38 @@ permissions_input(mode_t* mode)
 }
 
 static InputResult
+permissions_input_internal(char* prompt,
+                        bool (*is_valid_input)(const char*),
+                        mode_t (*convert_to_mode)(const char*))
+{
+  InputResult result;
+  {
+    result.value = malloc(sizeof(mode_t));
+    if (result.value == NULL) {
+      fprintf(stderr, "Error: Memory allocation failed.\n");
+      exit(EXIT_FAILURE);
+    }
+    result.success = false;
+  }
+
+  fputs(prompt, stdout);
+
+  char* str_mode = input_string();
+
+  if (is_valid_input(str_mode) == false) {
+    free(str_mode);
+    free(result.value);
+    return result;
+  }
+
+  *(mode_t*)result.value = convert_to_mode(str_mode);
+  result.success = true;
+
+  free(str_mode);
+  return result;
+}
+
+static InputResult
 permissions_input_file_name()
 {
   InputResult result;
@@ -99,68 +131,17 @@ permissions_input_file_name()
 static InputResult
 permissions_input_in_letters()
 {
-  InputResult result;
-  {
-    result.value = malloc(sizeof(mode_t));
-    if (result.value == NULL) {
-      fprintf(stderr, "Error: Memory allocation failed.\n");
-      exit(EXIT_FAILURE);
-    }
-    result.success = false;
-  }
-
-  fputs("Input permissions in letter format (rwxrwxrwx): ",
-        stdout);
-
-  char* str_mode = input_string();
-
-  if (converter_is_letters(str_mode) == false) {
-    free(str_mode);
-    free(result.value);
-    return result;
-  }
-
-  *(mode_t*)result.value =
-    converter_permissions_to_mode(str_mode);
-  result.success = true;
-
-  free(str_mode);
-  return result;
+  return permissions_input_internal(
+    "Input permissions in letter format (rwxrwxrwx): ",
+    converter_is_letters,
+    converter_permissions_to_mode);
 }
 
 static InputResult
 permissions_input_in_octal()
 {
-  InputResult result;
-  {
-    result.value = malloc(sizeof(mode_t));
-    if (result.value == NULL) {
-      fprintf(stderr, "Error: Memory allocation failed.\n");
-      exit(EXIT_FAILURE);
-    }
-    result.success = false;
-  }
-
-  fputs("Input permissions in octal format (777): ",
-        stdout);
-
-  char* str_mode = input_string();
-
-  if (is_unsigned(str_mode) == false) {
-    free(str_mode);
-    free(result.value);
-    return result;
-  }
-
-  if (converter_is_octal(str_mode) == false) {
-    free(str_mode);
-    free(result.value);
-    return result;
-  }
-
-  *(mode_t*)result.value = strtol(str_mode, NULL, 8);
-  result.success = true;
-
-  free(str_mode);
-  return result;
+  return permissions_input_internal(
+    "Input permissions in octal format (777): ",
+    converter_is_octal,
+    (mode_t (*)(const char*))strtol);
 }
