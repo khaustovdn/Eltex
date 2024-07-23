@@ -1,7 +1,7 @@
 #ifndef CONTACT_H_
 #define CONTACT_H_
 
-#include "../../utils/utils.h"
+#include "../../../utils/utils.h"
 
 typedef struct
 {

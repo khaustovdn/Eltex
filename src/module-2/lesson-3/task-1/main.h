@@ -1,7 +1,7 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
-#include "../../utils/utils.h"
+#include "../../../utils/utils.h"
 
 int
 main(int args, char* argv[]);

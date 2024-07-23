@@ -1,7 +1,7 @@
 #ifndef PERMISSIONS_INPUT_H_
 #define PERMISSIONS_INPUT_H_
 
-#include "../../utils/utils.h"
+#include "../../../utils/utils.h"
 #include <sys/types.h>
 
 typedef InputResult (*input_action)();

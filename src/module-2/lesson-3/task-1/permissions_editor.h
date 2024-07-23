@@ -1,7 +1,7 @@
 #ifndef PERMISSIONS_EDITOR_H_
 #define PERMISSIONS_EDITOR_H_
 
-#include "../../utils/utils.h"
+#include "../../../utils/utils.h"
 #include <sys/types.h>
 
 mode_t*
