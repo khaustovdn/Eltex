@@ -19,7 +19,13 @@ main(int argc, char* argv[])
 
   char* action_choice;
 
-  while (strncmp((action_choice = calculator_menu()), "q", MAX_LEN) != 0) {
+  for (;;) {
+    action_choice = calculator_menu();
+    if (strncmp(action_choice, "q", MAX_LEN) == 0) {
+      free(action_choice);
+      break;
+    }
+
     InputResult x, y;
     double result;
     
@@ -41,9 +47,10 @@ main(int argc, char* argv[])
       }
     if (commands[i].name == NULL)
       puts("Invalid choice of action");
-  }
   
-  free(action_choice);
+    free(action_choice);
+  }
+
   return EXIT_SUCCESS;
 }
 

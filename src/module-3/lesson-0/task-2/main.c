@@ -67,7 +67,7 @@ main(int argc, char* argv[])
 
   char* action_choice;
 
-  while (true) {
+  for (;;) {
     action_choice = command_interpreter_menu();
 
     if (strncmp(action_choice, "q", MAX_LEN) == 0) {

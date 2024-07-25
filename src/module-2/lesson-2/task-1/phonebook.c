@@ -36,12 +36,13 @@ phonebook_append(PhoneBook* phonebook, Contact* contact)
   if (phonebook->count < MAX_CONTACTS) {
     int i = 0;
     while (i < phonebook->capacity) {
-      if (phonebook_search(*phonebook, i) == -1)
+      if (phonebook_search(*phonebook, i + 1) == -1)
         break;
       i++;
     }
 
     contact->id = i + 1;
+    printf("%d\n", contact->id);
     phonebook->contacts[phonebook->count] = *contact;
     phonebook->count++;
   } else {

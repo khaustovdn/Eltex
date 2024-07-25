@@ -19,7 +19,13 @@ main(int argc, char* argv[])
   char* action_choice;
 
   PhoneBook* phonebook = phonebook_constuct();
-  while (strncmp((action_choice = phonebook_menu()), "q", MAX_LEN) != 0) {
+  for (;;) {
+    action_choice = phonebook_menu();
+    if (strncmp(action_choice, "q", MAX_LEN) == 0) {
+      free(action_choice);
+      break;
+    }
+
     int i = 0;
     for (; commands[i].name != NULL; i++)
       if (strncmp(action_choice, commands[i].name, MAX_LEN) == 0) {
@@ -28,12 +34,12 @@ main(int argc, char* argv[])
       }
     if (commands[i].name == NULL)
       puts("Invalid choice of action");
+
+    free(action_choice);
   }
 
-  free(action_choice);
   free(phonebook->contacts);
   free(phonebook);
-
   return EXIT_SUCCESS;
 }
 

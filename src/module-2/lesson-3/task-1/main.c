@@ -20,18 +20,18 @@ main(int argc, char* argv[])
     { NULL, NULL }
   };
 
-  char* action_choice =
-    (char*)malloc(MAX_LEN * sizeof(char));
-  if (action_choice == NULL) {
-    fprintf(stderr, "Error: Memory allocation failed.\n");
-    exit(EXIT_FAILURE);
-  }
+  char* action_choice;
 
   mode_t mode = 0;
-  while (
-    strncmp((action_choice = permissions_manager_menu()),
+  for (;;) {
+    action_choice = permissions_manager_menu();
+    if (strncmp(action_choice,
             "q",
-            MAX_LEN) != 0) {
+            MAX_LEN) == 0) {
+      free(action_choice);
+      break;
+    }
+
     int i = 0;
     for (; permissions_commands[i].name != NULL; i++) {
       if (strncmp(permissions_commands[i].name,
@@ -45,9 +45,9 @@ main(int argc, char* argv[])
     if (permissions_commands[i].name == NULL) {
       puts("Invalid choice of action");
     }
-  }
 
-  free(action_choice);
+    free(action_choice);
+  }
 
   return EXIT_SUCCESS;
 }

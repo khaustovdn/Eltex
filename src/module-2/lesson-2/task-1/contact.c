@@ -43,7 +43,13 @@ contact_fill_optional_properties(Contact* contact)
 
   char* action_choice;
 
-  while (strncmp((action_choice = contact_menu()), "q", MAX_LEN) != 0) {
+  for (;;) {
+    action_choice = contact_menu();
+    if (strncmp(action_choice, "q", MAX_LEN) == 0) {
+      free(action_choice);
+      break;
+    }
+
     int i = 0;
     for (;commands[i].name != NULL; i++)
       if (strncmp(action_choice, commands[i].name, MAX_LEN) == 0) {
@@ -52,9 +58,9 @@ contact_fill_optional_properties(Contact* contact)
       }
     if (commands[i].name == NULL)
       puts("Invalid choice of action");
-  }
 
-  free(action_choice);
+    free(action_choice);
+  }
 }
 
 char*
