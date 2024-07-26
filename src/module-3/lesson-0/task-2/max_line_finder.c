@@ -15,7 +15,7 @@ main(int argc, char* argv[])
 
   InputResult result;
   {
-    result.value = (char*)malloc(sizeof(char));
+    result.value = (char*)malloc(MAX_LEN * sizeof(char));
     if (result.value == NULL) {
       fprintf(stderr, "Error: Memory allocation failed.\n");
       exit(EXIT_FAILURE);
@@ -24,9 +24,11 @@ main(int argc, char* argv[])
   }
 
   for (int i = 1; i < argc; i++) {
-    strncpy(result.value, (result.success == false || strlen(result.value) < strlen(argv[i])) ?
-            argv[i] :
-            result.value, MAX_LEN);
+    strncpy(result.value,
+            (result.success == false || strlen(result.value) < strlen(argv[i]))
+              ? argv[i]
+              : result.value,
+            MAX_LEN);
     result.success = true;
   }
 

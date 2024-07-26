@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <wait.h>
 
 #include "main.h"
 
@@ -18,7 +19,7 @@ parse_command(char* action_choice, int* arg_count)
 
   char* token = prog_name;
   while (token != NULL) {
-    char** temp = (char**)realloc(prog_argv, (*arg_count + 1) * sizeof(char*));
+    char** temp = realloc(prog_argv, (*arg_count + 1) * sizeof(char*));
     if (temp == NULL) {
       perror("Failed to allocate memory for arguments");
       for (int i = 0; i < *arg_count; i++) {
@@ -87,8 +88,19 @@ main(int argc, char* argv[])
     int i = 0;
     for (; commands[i].name != NULL; i++) {
       if (strncmp(prog_argv[0], commands[i].name, MAX_LEN) == 0) {
-        if (execv(commands[i].property, prog_argv) == -1)
-          perror("Execv Failed");
+        int pid = fork();
+        switch (pid) {
+          case -1:
+            perror("Fork");
+            break;
+          case 0:
+            if (execv(commands[i].property, prog_argv) == -1)
+              perror("Execv");
+            break;
+          default:
+            wait(NULL);
+            break;
+        }
         break;
       }
     }
