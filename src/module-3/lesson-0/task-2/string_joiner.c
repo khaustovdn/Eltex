@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "../../../utils/utils.h"
 
@@ -12,16 +13,17 @@ main(int argc, char* argv[])
     exit(EXIT_FAILURE);
   }
 
-  int result = 0;
-  for (int i = 1; i < argc; i++) {
-    if (is_integer(argv[i]) == false) {
-      printf("The \"%s\" argument numbered %d is not a number\n", argv[i], i);
-      continue;
-    }
-    result += atoi(argv[i]);
+  char* result = (char*)malloc(MAX_LEN * sizeof(char));
+  if (result == NULL) {
+    fprintf(stderr, "Error: Memory allocation failed.\n");
+    exit(EXIT_FAILURE);
   }
 
-  printf("Result: %d\n", result);
+  for (int i = 1; i < argc; i++) {
+    strcat(result, argv[i]);
+  }
+
+  printf("Result: %s\n", result);
 
   return EXIT_SUCCESS;
 }
