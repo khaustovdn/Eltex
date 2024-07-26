@@ -18,7 +18,7 @@ parse_command(char* action_choice, int* arg_count)
 
   char* token = prog_name;
   while (token != NULL) {
-    char** temp = realloc(prog_argv, (*arg_count + 1) * sizeof(char*));
+    char** temp = (char**)realloc(prog_argv, (*arg_count + 1) * sizeof(char*));
     if (temp == NULL) {
       perror("Failed to allocate memory for arguments");
       for (int i = 0; i < *arg_count; i++) {
