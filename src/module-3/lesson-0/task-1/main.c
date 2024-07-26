@@ -1,7 +1,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -15,16 +14,16 @@ calculate_area(int start_index,
                const char* process_type)
 {
   for (int i = start_index; i < end_index; i++) {
-    if (is_unsigned(argv[i + 1]) == false) {
+    if (is_unsigned(argv[i]) == false) {
       printf("An invalid argument has been entered. The argument must be a "
              "positive number (%s).\n",
              process_type);
       continue;
     }
-    int side_length = atoi(argv[i + 1]);
+    int side_length = atoi(argv[i]);
     printf("%s calculates the area of square №%d: %d\n",
            process_type,
-           i + 1,
+           i,
            side_length * side_length);
     usleep(50000);
   }
@@ -33,7 +32,7 @@ calculate_area(int start_index,
 int
 main(int argc, char* argv[])
 {
-  if (argc == 1) {
+  if (argc < 2) {
     puts("Invalid argument format. Enter the lengths of the sides of the "
          "squares.");
     exit(EXIT_FAILURE);
@@ -46,10 +45,10 @@ main(int argc, char* argv[])
       puts("Error: Failed to create a child process.");
       exit(EXIT_FAILURE);
     case 0:
-      calculate_area(0, (argc - 1) / 2, argv, "Child process");
+      calculate_area(1, argc / 2, argv, "Child process");
       break;
     default:
-      calculate_area((argc - 1) / 2, argc - 1, argv, "Parent process");
+      calculate_area(argc / 2, argc, argv, "Parent process");
       wait(NULL);
       break;
   }
