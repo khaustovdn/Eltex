@@ -2,8 +2,8 @@
 
 - ## Module 3
    - ### Lesson 0
-     - [x] task 1
-     - [x] task 2
-     - [x] task 3
-     - [x] task 4
-     - [ ] task 5
+     - [X] task 1
+     - [X] task 2
+     - [X] task 3
+     - [X] task 4
+     - [X] task 5

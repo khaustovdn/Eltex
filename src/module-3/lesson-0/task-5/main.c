@@ -3,8 +3,25 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
+#include "../../../utils/utils.h"
+#include "main.h"
+
+void
+remove_spaces(char* str)
+{
+  char* dst = str;
+  while (*str) {
+    if (*str != ' ') {
+      *dst++ = *str;
+    }
+    str++;
+  }
+  *dst = '\0';
+}
 
 bool is_available = true;
 
@@ -19,6 +36,89 @@ listener(int sig)
   }
 }
 
+void
+child_handler()
+{
+  int fd = open("file.bin", O_RDONLY, 0777);
+  if (fd == -1) {
+    perror("open");
+    exit(EXIT_FAILURE);
+  }
+  int result;
+  for (int i = 1; read(fd, &result, sizeof(int)) > 0; i++) {
+    for (; is_available == false;)
+      pause();
+    printf("%d - %d\n", i, result);
+    usleep(50000);
+  }
+  close(fd);
+}
+
+void
+parent_handler(pid_t pid)
+{
+  sleep(2);
+  kill(pid, SIGUSR1);
+  int fd = open("file.bin", O_CREAT | O_WRONLY, 0777);
+  if (fd == -1) {
+    perror("open");
+    exit(EXIT_FAILURE);
+  }
+
+  char* action_choice;
+  for (;;) {
+    action_choice = file_editor_menu();
+    if (strncmp(action_choice, "q", MAX_LEN) == 0) {
+      free(action_choice);
+      break;
+    }
+    remove_spaces(action_choice);
+
+    char* id = (char*)malloc(MAX_LEN * sizeof(char));
+    if (id == NULL) {
+      perror("Error: Memory allocation failed.\n");
+      exit(EXIT_FAILURE);
+    }
+
+    char* new_value = (char*)malloc(MAX_LEN * sizeof(char));
+    if (new_value == NULL) {
+      perror("Error: Memory allocation failed.\n");
+      exit(EXIT_FAILURE);
+    }
+
+    strncpy(id, strtok(action_choice, "-"), MAX_LEN);
+    strncpy(new_value, strtok(NULL, "-"), MAX_LEN);
+
+    if (is_unsigned(id) == false) {
+      puts("Warning: ID is not a number");
+      continue;
+    }
+    if (is_integer(new_value) == false) {
+      puts("Warning: value is not a number");
+      continue;
+    }
+
+    int result = atoi(new_value);
+    lseek(fd, sizeof(int) * (atoi(id) - 1), SEEK_SET);
+    write(fd, &result, sizeof(result));
+  }
+
+  close(fd);
+  kill(pid, SIGUSR2);
+  wait(NULL);
+}
+
+char*
+file_editor_menu()
+{
+  output_wrapped_title("File Editor Menu", 50, '-');
+
+  fputs("Enter the identification number and the new value.\nIn this format "
+        "(ID - new value)\nInput: ",
+        stdout);
+  return input_string();
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -31,39 +131,11 @@ main(int argc, char* argv[])
       perror("fork");
       exit(EXIT_FAILURE);
     case 0: {
-      int fd = open("file.bin", O_RDONLY, 0777);
-      if (fd == -1) {
-        perror("open");
-        exit(EXIT_FAILURE);
-      }
-      int result;
-      for (; read(fd, &result, sizeof(int)) > 0;) {
-        for (; is_available == false;)
-          pause();
-        printf("%d\n", result);
-        usleep(100000);
-      }
-      close(fd);
+      child_handler();
       break;
     }
     default:
-      sleep(5);
-      kill(pid, SIGUSR1);
-      int fd = open("file.bin", O_CREAT | O_WRONLY, 0777);
-      if (fd == -1) {
-        perror("open");
-        exit(EXIT_FAILURE);
-      }
-      int result = 12;
-      if (write(fd, &result, sizeof(result)) == -1) {
-        perror("write");
-        close(fd);
-        exit(EXIT_FAILURE);
-      }
-      close(fd);
-      sleep(5);
-      kill(pid, SIGUSR2);
-      wait(NULL);
+      parent_handler(pid);
       break;
   }
 
