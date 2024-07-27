@@ -10,48 +10,39 @@
 char**
 parse_command(char* action_choice, int* arg_count)
 {
-  char* prog_name = strtok(action_choice, " ");
-  if (prog_name == NULL)
+  char* token = strtok(action_choice, " ");
+  if (token == NULL)
     return NULL;
 
-  char** prog_argv = NULL;
+  char** prog_argv = (char**)malloc(MAX_LEN * sizeof(char*));
+  if (prog_argv == NULL) {
+    perror("Error: Memory allocation failed.\n");
+    exit(EXIT_FAILURE);
+  }
+
   *arg_count = 0;
 
-  char* token = prog_name;
   while (token != NULL) {
-    char** temp = realloc(prog_argv, (*arg_count + 1) * sizeof(char*));
-    if (temp == NULL) {
-      perror("Failed to allocate memory for arguments");
-      for (int i = 0; i < *arg_count; i++) {
-        free(prog_argv[i]);
-      }
-      free(prog_argv);
-      exit(EXIT_FAILURE);
+    if (*arg_count >= MAX_LEN - 1) {
+      perror("Too many arguments\n");
+      break;
     }
-    prog_argv = temp;
-    prog_argv[*arg_count] = strdup(token);
+
+    prog_argv[*arg_count] = (char*)malloc((strlen(token) + 1) * sizeof(char));
     if (prog_argv[*arg_count] == NULL) {
-      perror("Failed to allocate memory for argument");
+      perror("Error: Memory allocation failed.\n");
       for (int i = 0; i < *arg_count; i++) {
         free(prog_argv[i]);
       }
       free(prog_argv);
       exit(EXIT_FAILURE);
     }
+
+    strcpy(prog_argv[*arg_count], token);
     (*arg_count)++;
     token = strtok(NULL, " ");
   }
 
-  char** temp = realloc(prog_argv, (*arg_count + 1) * sizeof(char*));
-  if (temp == NULL) {
-    perror("Failed to allocate memory for arguments");
-    for (int i = 0; i < *arg_count; i++) {
-      free(prog_argv[i]);
-    }
-    free(prog_argv);
-    exit(EXIT_FAILURE);
-  }
-  prog_argv = temp;
   prog_argv[*arg_count] = NULL;
 
   return prog_argv;

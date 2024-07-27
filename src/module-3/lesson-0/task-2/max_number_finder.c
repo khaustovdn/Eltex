@@ -36,5 +36,6 @@ main(int argc, char* argv[])
 
   printf("Result: %d\n", *(int*)result.value);
 
+  free(result.value);
   return EXIT_SUCCESS;
 }

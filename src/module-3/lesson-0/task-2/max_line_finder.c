@@ -34,5 +34,6 @@ main(int argc, char* argv[])
 
   printf("Result: %s. Count: %lu\n", (char*)result.value, strlen(result.value));
 
+  free(result.value);
   return EXIT_SUCCESS;
 }
