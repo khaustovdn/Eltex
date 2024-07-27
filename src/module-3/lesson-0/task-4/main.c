@@ -1,3 +1,4 @@
+#include <fcntl.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,10 +46,18 @@ main(int argc, char* argv[])
       break;
     default:
       close(pipefd[1]);
+      int fd = open("file.bin", O_CREAT | O_TRUNC | O_WRONLY, 0777);
+      if (fd == -1) {
+        printf("Error: File cannot be opened for writing\n");
+        exit(EXIT_FAILURE);
+      }
       int result;
-      for (; read(pipefd[0], &result, sizeof(int)) > 0;)
+      for (; read(pipefd[0], &result, sizeof(int)) > 0;) {
         printf("%d\n", result);
+        write(fd, &result, sizeof(int));
+      }
       close(pipefd[0]);
+      close(fd);
       wait(NULL);
       break;
   }
