@@ -39,36 +39,38 @@ main(int argc, char* argv[])
   for (;;) {
     /* receive */
     output_wrapped_title("Output", 30, '-');
-    if (msgrcv(msgid, &message, sizeof(message.mtext), 1, 0) == -1) {
+    if (msgrcv(msgid, &message, sizeof(message.mtext), 0, 0) == -1) {
       perror("msgrcv");
-      free(action_choice);
       exit(EXIT_FAILURE);
     }
+    if (message.mtype == 100) {
+      puts("The server has successfully shut down");
+      break;
+    }
     printf("Server process received: %d\n", *(int*)message.mtext);
-    /* pause */
-    sleep(1);
 
+    /* send */
     action_choice = server_menu();
     if (strncmp(action_choice, "q", MAX_LEN) == 0) {
-      free(action_choice);
-      break;
+      message.mtype = 100;
+      *(int*)message.mtext = 0;
+    } else {
+      if (is_integer(action_choice) == false) {
+        puts("Warning: It is necessary to enter the number");
+        free(action_choice);
+        continue;
+      }
+      message.mtype = 1;
+      *(int*)message.mtext = atoi(action_choice);
     }
-    /* send */
-    if (is_integer(action_choice) == false) {
-      puts("Warning: It is necessary to enter the number");
-      free(action_choice);
-      break;
-    }
-    srand(time(NULL));
-    message.mtype = 1;
-    *(int*)message.mtext = atoi(action_choice);
     if (msgsnd(msgid, &message, sizeof(message.mtext), 0) == -1) {
       perror("msgsnd");
       free(action_choice);
       exit(EXIT_FAILURE);
     }
-    /* pause */
-    sleep(1);
+    if (message.mtype == 100) {
+      break;
+    }
 
     free(action_choice);
   }
