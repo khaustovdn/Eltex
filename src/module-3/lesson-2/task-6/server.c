@@ -21,10 +21,9 @@ struct msgbuf
 char*
 client_menu()
 {
-  output_wrapped_title("Client Menu", 50, '-');
+  output_wrapped_title("Server Menu", 50, '-');
 
-  fputs("Enter the number to send\n\tq. Quit\nInput: ",
-        stdout);
+  fputs("Enter the number to send\n\tq. Quit\nInput: ", stdout);
   return input_string();
 }
 
@@ -39,9 +38,8 @@ main(int argc, char* argv[])
 
   for (;;) {
     action_choice = client_menu();
-    if (strncmp(action_choice,
-                "q",
-                MAX_LEN) == 0) {
+    if (strncmp(action_choice, "q", MAX_LEN) == 0) {
+      free(action_choice);
       break;
     }
 
@@ -51,7 +49,7 @@ main(int argc, char* argv[])
       perror("msgrcv");
       exit(EXIT_FAILURE);
     }
-    printf("Client process received: %d\n", *(int*)message.mtext);
+    printf("Server process received: %d\n", *(int*)message.mtext);
     /* pause */
     sleep(1);
 
@@ -60,7 +58,8 @@ main(int argc, char* argv[])
       puts("Warning: It is necessary to enter the number");
       free(action_choice);
       continue;
-    }    srand(time(NULL));
+    }
+    srand(time(NULL));
     message.mtype = 1;
     *(int*)message.mtext = atoi(action_choice);
     if (msgsnd(msgid, &message, sizeof(message.mtext), 0) == -1) {

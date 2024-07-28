@@ -67,40 +67,36 @@ parent_handler(pid_t pid)
 
   char* action_choice;
   for (;;) {
+    /* fill in the action selection field */
     action_choice = file_editor_menu();
     if (strncmp(action_choice, "q", MAX_LEN) == 0) {
       free(action_choice);
       break;
     }
+
+    /* searching for an identifier and a new value */
     remove_spaces(action_choice);
 
-    char* id = (char*)malloc(MAX_LEN * sizeof(char));
-    if (id == NULL) {
-      perror("Error: Memory allocation failed.\n");
-      exit(EXIT_FAILURE);
-    }
-
-    char* new_value = (char*)malloc(MAX_LEN * sizeof(char));
-    if (new_value == NULL) {
-      perror("Error: Memory allocation failed.\n");
-      exit(EXIT_FAILURE);
-    }
-
-    strncpy(id, strtok(action_choice, "-"), MAX_LEN);
-    strncpy(new_value, strtok(NULL, "-"), MAX_LEN);
+    char* id = strtok(action_choice, "-");
+    char* new_value = strtok(NULL, "-");
 
     if (is_unsigned(id) == false) {
       puts("Warning: ID is not a number");
+      free(action_choice);
       continue;
     }
     if (is_integer(new_value) == false) {
       puts("Warning: value is not a number");
+      free(action_choice);
       continue;
     }
 
+    /* message sending */
     int result = atoi(new_value);
     lseek(fd, sizeof(int) * (atoi(id) - 1), SEEK_SET);
     write(fd, &result, sizeof(result));
+
+    free(action_choice);
   }
 
   close(fd);
