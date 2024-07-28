@@ -1,16 +1,15 @@
-#include <fcntl.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/ipc.h>
 #include <sys/msg.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <time.h>
-#include <unistd.h>
 
 #include "../../../utils/utils.h"
+
+#define SERVER_QUIT_MESSAGE_PRIORITY 1
+#define CLIENT_QUIT_MESSAGE_PRIORITY 2
+#define SERVER_MESSAGE_PRIORITY 3
+#define CLIENT_MESSAGE_PRIORITY 4
 
 struct msgbuf
 {
@@ -39,20 +38,26 @@ main(int argc, char* argv[])
   for (;;) {
     /* receive */
     output_wrapped_title("Output", 30, '-');
-    if (msgrcv(msgid, &message, sizeof(message.mtext), 0, 0) == -1) {
-      perror("msgrcv");
-      exit(EXIT_FAILURE);
-    }
-    if (message.mtype == 100) {
+    if (msgrcv(msgid,
+               &message,
+               sizeof(message.mtext),
+               SERVER_QUIT_MESSAGE_PRIORITY,
+               IPC_NOWAIT) != -1) {
       puts("The server has successfully shut down");
       break;
+    }
+    if (msgrcv(
+          msgid, &message, sizeof(message.mtext), CLIENT_MESSAGE_PRIORITY, 0) ==
+        -1) {
+      perror("msgrcv");
+      exit(EXIT_FAILURE);
     }
     printf("Server process received: %d\n", *(int*)message.mtext);
 
     /* send */
     action_choice = server_menu();
     if (strncmp(action_choice, "q", MAX_LEN) == 0) {
-      message.mtype = 100;
+      message.mtype = CLIENT_QUIT_MESSAGE_PRIORITY;
       *(int*)message.mtext = 0;
     } else {
       if (is_integer(action_choice) == false) {
@@ -60,16 +65,13 @@ main(int argc, char* argv[])
         free(action_choice);
         continue;
       }
-      message.mtype = 1;
+      message.mtype = SERVER_MESSAGE_PRIORITY;
       *(int*)message.mtext = atoi(action_choice);
     }
     if (msgsnd(msgid, &message, sizeof(message.mtext), 0) == -1) {
       perror("msgsnd");
       free(action_choice);
       exit(EXIT_FAILURE);
-    }
-    if (message.mtype == 100) {
-      break;
     }
 
     free(action_choice);

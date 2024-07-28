@@ -1,16 +1,15 @@
-#include <fcntl.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/ipc.h>
 #include <sys/msg.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <time.h>
-#include <unistd.h>
 
 #include "../../../utils/utils.h"
+
+#define SERVER_QUIT_MESSAGE_PRIORITY 1
+#define CLIENT_QUIT_MESSAGE_PRIORITY 2
+#define SERVER_MESSAGE_PRIORITY 3
+#define CLIENT_MESSAGE_PRIORITY 4
 
 struct msgbuf
 {
@@ -31,7 +30,7 @@ int
 main(int argc, char* argv[])
 {
   key_t key = ftok("prof", 1);
-  int msgid = msgget(key, IPC_CREAT | 0666);
+  int msgid = msgget(key, 0);
 
   struct msgbuf message;
   char* action_choice;
@@ -40,7 +39,7 @@ main(int argc, char* argv[])
     /* send */
     action_choice = client_menu();
     if (strncmp(action_choice, "q", MAX_LEN) == 0) {
-      message.mtype = 100;
+      message.mtype = SERVER_QUIT_MESSAGE_PRIORITY;
       *(int*)message.mtext = 0;
     } else {
       if (is_integer(action_choice) == false) {
@@ -48,7 +47,7 @@ main(int argc, char* argv[])
         free(action_choice);
         continue;
       }
-      message.mtype = 1;
+      message.mtype = CLIENT_MESSAGE_PRIORITY;
       *(int*)message.mtext = atoi(action_choice);
     }
     if (msgsnd(msgid, &message, sizeof(message.mtext), 0) == -1) {
@@ -56,26 +55,29 @@ main(int argc, char* argv[])
       free(action_choice);
       exit(EXIT_FAILURE);
     }
-    if (message.mtype == 100) {
-      break;
-    }
 
     /* receive */
     output_wrapped_title("Output", 30, '-');
-    if (msgrcv(msgid, &message, sizeof(message.mtext), 0, 0) == -1) {
+    if (msgrcv(msgid,
+               &message,
+               sizeof(message.mtext),
+               CLIENT_QUIT_MESSAGE_PRIORITY,
+               IPC_NOWAIT) != -1) {
+      puts("The client has successfully shut down");
+      free(action_choice);
+      break;
+    }
+    if (msgrcv(
+          msgid, &message, sizeof(message.mtext), SERVER_MESSAGE_PRIORITY, 0) ==
+        -1) {
       perror("msgrcv");
       free(action_choice);
       exit(EXIT_FAILURE);
-    }
-    if (message.mtype == 100) {
-      puts("The client has successfully shut down");
-      break;
     }
     printf("Client process received: %d\n", *(int*)message.mtext);
 
     free(action_choice);
   }
 
-  msgctl(msgid, IPC_RMID, NULL);
   return EXIT_SUCCESS;
 }
