@@ -1,7 +1,7 @@
 # Eltex
 
 - ## Module 3
-   - ### Lesson 0
+   - ### Lesson 1
      - [X] task 1
      - [X] task 2
      - [X] task 3
