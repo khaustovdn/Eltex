@@ -22,8 +22,48 @@ client_menu()
 {
   output_wrapped_title("Client Menu", 50, '-');
 
-  fputs("Enter the number to send\n\tq. Quit\nInput: ", stdout);
+  fputs("Enter the number to send\n\tq. Quit\nInput: ",
+        stdout);
   return input_string();
+}
+
+void
+receive_messages(int msgid)
+{
+  output_wrapped_title("Output", 30, '-');
+  struct msgbuf message;
+  while (msgrcv(msgid,
+                &message,
+                sizeof(message.mtext),
+                CLIENT_QUIT_MESSAGE_PRIORITY,
+                IPC_NOWAIT) != -1 ||
+         msgrcv(msgid,
+                &message,
+                sizeof(message.mtext),
+                CLIENT_MESSAGE_PRIORITY,
+                IPC_NOWAIT) != -1) {
+    if (message.mtype == CLIENT_QUIT_MESSAGE_PRIORITY) {
+      puts("The client has successfully shut down");
+      exit(EXIT_SUCCESS);
+    } else if (message.mtype == CLIENT_MESSAGE_PRIORITY) {
+      printf("Client process received: %d\n",
+             *(int*)message.mtext);
+    }
+  }
+}
+
+void
+send_message(int msgid, const char* value, long priority)
+{
+  struct msgbuf message;
+  message.mtype = priority;
+  *(int*)message.mtext = atoi(value);
+
+  if (msgsnd(msgid, &message, sizeof(message.mtext), 0) ==
+      -1) {
+    perror("msgsnd");
+    exit(EXIT_FAILURE);
+  }
 }
 
 int
@@ -32,50 +72,26 @@ main(int argc, char* argv[])
   key_t key = ftok("prof", 1);
   int msgid = msgget(key, 0);
 
-  struct msgbuf message;
-  char* action_choice;
-
   for (;;) {
-    /* send */
-    action_choice = client_menu();
-    if (strncmp(action_choice, "q", MAX_LEN) == 0) {
-      message.mtype = SERVER_QUIT_MESSAGE_PRIORITY;
-      *(int*)message.mtext = 0;
-    } else {
-      if (is_integer(action_choice) == false) {
-        puts("Warning: It is necessary to enter the number");
-        free(action_choice);
-        continue;
-      }
-      message.mtype = CLIENT_MESSAGE_PRIORITY;
-      *(int*)message.mtext = atoi(action_choice);
-    }
-    if (msgsnd(msgid, &message, sizeof(message.mtext), 0) == -1) {
-      perror("msgsnd");
-      free(action_choice);
-      exit(EXIT_FAILURE);
-    }
+    receive_messages(msgid);
 
-    /* receive */
-    output_wrapped_title("Output", 30, '-');
-    if (msgrcv(msgid,
-               &message,
-               sizeof(message.mtext),
-               CLIENT_QUIT_MESSAGE_PRIORITY,
-               IPC_NOWAIT) != -1) {
-      puts("The client has successfully shut down");
+    char* action_choice = client_menu();
+    if (strncmp(action_choice, "q", MAX_LEN) == 0) {
+      send_message(
+        msgid, action_choice, SERVER_QUIT_MESSAGE_PRIORITY);
       free(action_choice);
+      puts("\nThe client has successfully shut down");
       break;
     }
-    if (msgrcv(
-          msgid, &message, sizeof(message.mtext), SERVER_MESSAGE_PRIORITY, 0) ==
-        -1) {
-      perror("msgrcv");
-      free(action_choice);
-      exit(EXIT_FAILURE);
-    }
-    printf("Client process received: %d\n", *(int*)message.mtext);
 
+    if (!is_integer(action_choice)) {
+      puts("Warning: It is necessary to enter a number");
+      free(action_choice);
+      continue;
+    }
+
+    send_message(
+      msgid, action_choice, SERVER_MESSAGE_PRIORITY);
     free(action_choice);
   }
 
