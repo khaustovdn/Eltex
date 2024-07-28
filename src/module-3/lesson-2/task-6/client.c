@@ -54,6 +54,7 @@ main(int argc, char* argv[])
     *(int*)message.mtext = atoi(action_choice);
     if (msgsnd(msgid, &message, sizeof(message.mtext), 0) == -1) {
       perror("msgsnd");
+      free(action_choice);
       exit(EXIT_FAILURE);
     }
     /* pause */
@@ -62,6 +63,7 @@ main(int argc, char* argv[])
     output_wrapped_title("Output", 30, '-');
     if (msgrcv(msgid, &message, sizeof(message.mtext), 1, 0) == -1) {
       perror("msgrcv");
+      free(action_choice);
       exit(EXIT_FAILURE);
     }
     printf("Client process received: %d\n", *(int*)message.mtext);
@@ -72,6 +74,5 @@ main(int argc, char* argv[])
   }
 
   msgctl(msgid, IPC_RMID, NULL);
-  free(action_choice);
   return EXIT_SUCCESS;
 }
