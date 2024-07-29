@@ -7,13 +7,22 @@ void
 remove_spaces(char* str);
 
 void
+handle_error(const char* msg, int exit_code);
+
+void
 listener(int sig);
 
 void
-child_handler();
+process_child(int fd, int pipefd[]);
 
 void
-parent_handler(pid_t pid);
+update_file(int fd, const char* id, const char* new_value);
+
+void
+parent_handler(pid_t pid, int pipefd[]);
+
+void
+child_handler(int pipefd[]);
 
 char*
 file_editor_menu();
