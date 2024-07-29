@@ -9,6 +9,6 @@
      - [X] task 5
    - ### Lesson 2
      - [X] task 6
-     - [ ] task 7
+     - [X] task 7
      - [ ] task 8
      - [ ] task 9
