@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "../../../utils/utils.h"
 
@@ -27,7 +28,7 @@ receive_messages(mqd_t qd)
   char message[MAX_LEN];
 
   while (mq_receive(qd, message, MAX_LEN, &priority) != -1) {
-    printf("Server process received: %s\n", message);
+    printf("Client process received: %s\n", message);
   }
 
   if (errno != EAGAIN) {
@@ -36,9 +37,9 @@ receive_messages(mqd_t qd)
 }
 
 char*
-server_menu()
+client_menu()
 {
-  output_wrapped_title("Server Menu", 50, '-');
+  output_wrapped_title("Client Menu", 50, '-');
 
   fputs("Enter the number to send\n\tq. Quit\nInput: ", stdout);
   return input_string();
@@ -47,46 +48,47 @@ server_menu()
 int
 main(int argc, char* argv[])
 {
-  mqd_t qd_server;
+  mqd_t qd_client;
 
   struct mq_attr queue_attr = { .mq_flags = 0,
                                 .mq_maxmsg = MAX_MESSAGES,
                                 .mq_msgsize = MAX_LEN,
                                 .mq_curmsgs = 0 };
 
-  qd_server = mq_open(SERVER_QUEUE_NAME,
+  qd_client = mq_open(CLIENT_QUEUE_NAME,
                       O_RDONLY | O_CREAT | O_NONBLOCK,
                       QUEUE_PERMISSIONS,
                       &queue_attr);
-  if (qd_server == (mqd_t)-1) {
-    perror("mq_open (server)");
+  if (qd_client == (mqd_t)-1) {
+    perror("mq_open (client)");
     exit(EXIT_FAILURE);
   }
 
   for (;;) {
-    receive_messages(qd_server);
+    receive_messages(qd_client);
 
-    char* action_choice = server_menu();
+    char* action_choice = client_menu();
     if (!action_choice) {
       fprintf(stderr, "Failed to read input\n");
       continue;
     }
 
-    mqd_t qd_client = mq_open(CLIENT_QUEUE_NAME, O_WRONLY);
-    if (qd_client == (mqd_t)-1) {
-      perror("mq_open (client)");
+    mqd_t qd_server = mq_open(SERVER_QUEUE_NAME, O_WRONLY);
+    if (qd_server == (mqd_t)-1) {
+      perror("mq_open (server)");
       free(action_choice);
       break;
     }
 
     if (strncmp(action_choice, "q", MAX_LEN) == 0) {
-      puts("\nThe server has successfully shut down");
-      if (mq_send(qd_client,
+      puts("\nThe client has successfully shut down");
+      if (mq_send(qd_server,
                   action_choice,
                   MAX_LEN,
-                  CLIENT_QUIT_MESSAGE_PRIORITY) == -1)
-        perror("mq_send (to client)");
-      mq_close(qd_client);
+                  SERVER_QUIT_MESSAGE_PRIORITY) == -1) {
+        perror("mq_send (to server quit)");
+      }
+      mq_close(qd_server);
       free(action_choice);
       break;
     }
@@ -97,20 +99,18 @@ main(int argc, char* argv[])
       continue;
     }
 
-    if (mq_send(qd_client,
+    if (mq_send(qd_server,
                 action_choice,
                 MAX_LEN,
-                CLIENT_MESSAGE_PRIORITY) == -1) {
-      perror("mq_send (to client)");
+                SERVER_MESSAGE_PRIORITY) == -1) {
+      perror("mq_send (to server)");
     }
 
-    mq_close(qd_client);
+    mq_close(qd_server);
     free(action_choice);
   }
 
-  mq_close(qd_server);
-  mq_unlink(SERVER_QUEUE_NAME);
-  mq_unlink(CLIENT_QUEUE_NAME);
+  mq_close(qd_client);
 
   return EXIT_SUCCESS;
 }
