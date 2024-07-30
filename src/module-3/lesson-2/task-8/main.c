@@ -10,7 +10,8 @@
 #include "../../../utils/utils.h"
 #include "main.h"
 
-#if defined(__GNU_LIBRARY__) && !defined(_SEM_SEMUN_UNDEFINED)
+#if defined(__GNU_LIBRARY__) &&                            \
+  !defined(_SEM_SEMUN_UNDEFINED)
 /* union semun is defined by including <sys/sem.h> */
 #else
 /* according to X/OPEN we have to define it ourselves */
@@ -45,54 +46,9 @@ handle_error(const char* msg, int exit_code)
 }
 
 void
-process_child(int fd, int pipefd[])
-{
-  key_t key = ftok("prof", 1);
-  int semid = semget(key, 1, 0);
-
-  struct sembuf lock_res = { 0, -1, 0 };
-  struct sembuf rel_res = { 0, 1, 0 };
-
-  int result;
-  for (int i = 1;; i++) {
-    if (semop(semid, &lock_res, 1) == -1) {
-      handle_error("semget (lock_res)", EXIT_FAILURE);
-    }
-
-    ssize_t bytes_read = read(fd, &result, sizeof(result));
-    if (bytes_read == -1) {
-      handle_error("read", EXIT_FAILURE);
-    } else if (bytes_read == 0) {
-      break;
-    }
-
-    printf("%d - %d\n", i, result);
-    usleep(50000);
-
-    if (semop(semid, &rel_res, 1) == -1) {
-      handle_error("semget (rel_res)", EXIT_FAILURE);
-    }
-  }
-
-  if (close(fd) == -1 || close(pipefd[0]) == -1) {
-    handle_error("close", EXIT_FAILURE);
-  }
-
-  srand((unsigned)time(NULL));
-  result = rand() % 100;
-  if (write(pipefd[1], &result, sizeof(result)) == -1) {
-    handle_error("write", EXIT_FAILURE);
-  }
-
-  if (close(pipefd[1]) == -1) {
-    handle_error("close", EXIT_FAILURE);
-  }
-}
-
-void
 update_file(int fd, const char* id, const char* new_value)
 {
-  if (lseek(fd, sizeof(int) * (atoi(id) - 1), SEEK_SET) == -1) {
+  if (lseek(fd, sizeof(int) * (atoi(id)), SEEK_SET) == -1) {
     handle_error("lseek", EXIT_FAILURE);
   }
 
@@ -164,7 +120,8 @@ parent_handler(pid_t pid, int pipefd[])
   }
 
   int result;
-  ssize_t bytes_read = read(pipefd[0], &result, sizeof(result));
+  ssize_t bytes_read =
+    read(pipefd[0], &result, sizeof(result));
   if (bytes_read == -1) {
     handle_error("read", EXIT_FAILURE);
   } else if (bytes_read > 0) {
@@ -184,11 +141,58 @@ parent_handler(pid_t pid, int pipefd[])
 void
 child_handler(int pipefd[])
 {
-  int fd = open("file.bin", O_RDONLY);
-  if (fd == -1) {
-    handle_error("open", EXIT_FAILURE);
+  key_t key = ftok("prof", 1);
+  int semid = semget(key, 1, 0);
+
+  struct sembuf lock_res = { 0, -1, 0 };
+  struct sembuf rel_res = { 0, 1, 0 };
+
+  int result;
+  for (int i = 1;; i++) {
+    if (semop(semid, &lock_res, 1) == -1) {
+      handle_error("semget (lock_res)", EXIT_FAILURE);
+    }
+
+    int fd = open("file.bin", O_RDONLY);
+    if (fd == -1) {
+      handle_error("open", EXIT_FAILURE);
+    }
+
+    if (lseek(fd, sizeof(int) * i, SEEK_SET) == -1) {
+      handle_error("lseek", EXIT_FAILURE);
+    }
+    ssize_t bytes_read = read(fd, &result, sizeof(result));
+    if (bytes_read == -1) {
+      handle_error("read", EXIT_FAILURE);
+    } else if (bytes_read == 0) {
+      break;
+    }
+
+    printf("%d - %d\n", i, result);
+    usleep(50000);
+
+    if (semop(semid, &rel_res, 1) == -1) {
+      handle_error("semget (rel_res)", EXIT_FAILURE);
+    }
+
+    if (close(fd) == -1) {
+      handle_error("close", EXIT_FAILURE);
+    }
   }
-  process_child(fd, pipefd);
+
+  if (close(pipefd[0]) == -1) {
+    handle_error("close", EXIT_FAILURE);
+  }
+
+  srand((unsigned)time(NULL));
+  result = rand() % 100;
+  if (write(pipefd[1], &result, sizeof(result)) == -1) {
+    handle_error("write", EXIT_FAILURE);
+  }
+
+  if (close(pipefd[1]) == -1) {
+    handle_error("close", EXIT_FAILURE);
+  }
 }
 
 char*
