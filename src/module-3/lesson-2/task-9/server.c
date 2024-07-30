@@ -62,13 +62,20 @@ update_file(int fd, const char* id, const char* new_value)
 void
 parent_handler(int pipefd[])
 {
-  key_t key = ftok("prof", 1);
-  int semid = semget(key, 1, 0666 | IPC_CREAT);
+  key_t key = ftok("/etc/fstab", 1);
+  int semid = semget(key, 2, 0666 | IPC_CREAT);
 
   struct sembuf lock_res = { 0, -1, 0 };
   struct sembuf rel_res = { 0, 1, 0 };
-  union semun arg = { .val = 1 };
+  struct sembuf push = { 1, -1, IPC_NOWAIT };
+  struct sembuf pop = { 1, 1, IPC_NOWAIT };
+  union semun arg;
+  arg.val = 1;
   semctl(semid, 0, SETVAL, arg);
+  arg.val = 2;
+  semctl(semid, 1, SETVAL, arg);
+  arg.val = 0;
+  semctl(semid, 2, SETVAL, arg);
 
   if (close(pipefd[1]) == -1) {
     handle_error("close", EXIT_FAILURE);
@@ -76,6 +83,9 @@ parent_handler(int pipefd[])
 
   sleep(2);
   if (semop(semid, &lock_res, 1) == -1) {
+    handle_error("semget (lock_res)", EXIT_FAILURE);
+  }
+  if (semop(semid, &pop, 1) == -1) {
     handle_error("semget (lock_res)", EXIT_FAILURE);
   }
 
