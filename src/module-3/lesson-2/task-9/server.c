@@ -1,14 +1,13 @@
 #include <fcntl.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/sem.h>
+#include <sys/types.h>
 #include <sys/wait.h>
-#include <time.h>
+#include <unistd.h>
 
 #include "../../../utils/utils.h"
-#include "server.h"
 
 #if defined(__GNU_LIBRARY__) &&                            \
   !defined(_SEM_SEMUN_UNDEFINED)
@@ -39,59 +38,85 @@ remove_spaces(char* str)
 }
 
 void
-handle_error(const char* msg, int exit_code)
+handle_error(const char* msg)
 {
   perror(msg);
-  exit(exit_code);
 }
 
 void
 update_file(int fd, const char* id, const char* new_value)
 {
-  if (lseek(fd, sizeof(int) * (atoi(id) - 1), SEEK_SET) ==
+  int record_id = atoi(id);
+  if (record_id <= 0) {
+    fprintf(stderr, "Invalid ID: %s\n", id);
+    return;
+  }
+
+  if (lseek(fd, sizeof(int) * (record_id - 1), SEEK_SET) ==
       -1) {
-    handle_error("lseek", EXIT_FAILURE);
+    handle_error("lseek");
+    return;
   }
 
   int result = atoi(new_value);
   if (write(fd, &result, sizeof(result)) == -1) {
-    handle_error("write", EXIT_FAILURE);
+    handle_error("write");
   }
+}
+
+char*
+file_editor_menu()
+{
+  output_wrapped_title("File Editor Menu", 50, '-');
+
+  fputs("Enter the identification number and the new "
+        "value.\nIn this format (ID - new value)\nInput: ",
+        stdout);
+  return input_string();
 }
 
 void
 parent_handler(int pipefd[])
 {
   key_t key = ftok("/etc/fstab", 1);
+  if (key == -1) {
+    handle_error("ftok");
+    return;
+  }
+
   int semid = semget(key, 2, 0666 | IPC_CREAT);
+  if (semid == -1) {
+    handle_error("semget");
+    return;
+  }
 
   struct sembuf lock_res = { 0, -1, 0 };
   struct sembuf rel_res = { 0, 1, 0 };
-  struct sembuf push = { 1, -1, IPC_NOWAIT };
-  struct sembuf pop = { 1, 1, IPC_NOWAIT };
   union semun arg;
   arg.val = 1;
-  semctl(semid, 0, SETVAL, arg);
-  arg.val = 2;
-  semctl(semid, 1, SETVAL, arg);
-  arg.val = 0;
-  semctl(semid, 2, SETVAL, arg);
-
-  if (close(pipefd[1]) == -1) {
-    handle_error("close", EXIT_FAILURE);
+  if (semctl(semid, 0, SETVAL, arg) == -1) {
+    handle_error("semctl (setval 0)");
+    return;
   }
+  arg.val = 2;
+  if (semctl(semid, 1, SETVAL, arg) == -1) {
+    handle_error("semctl (setval 1)");
+    return;
+  }
+
+  close(pipefd[1]);
 
   sleep(2);
   if (semop(semid, &lock_res, 1) == -1) {
-    handle_error("semget (lock_res)", EXIT_FAILURE);
-  }
-  if (semop(semid, &pop, 1) == -1) {
-    handle_error("semget (lock_res)", EXIT_FAILURE);
+    handle_error("semop (lock_res)");
+    return;
   }
 
   int fd = open("file.bin", O_CREAT | O_WRONLY, 0666);
   if (fd == -1) {
-    handle_error("open", EXIT_FAILURE);
+    handle_error("open");
+    semop(semid, &rel_res, 1);
+    return;
   }
 
   char* action_choice;
@@ -119,29 +144,27 @@ parent_handler(int pipefd[])
   }
 
   close(fd);
-  if (semop(semid, &rel_res, 1) == -1) {
-    handle_error("semget (rel_res)", EXIT_FAILURE);
-  }
+  semop(semid, &rel_res, 1);
 
   wait(NULL);
 
   fd = open("file.bin", O_APPEND | O_WRONLY, 0666);
   if (fd == -1) {
-    handle_error("open", EXIT_FAILURE);
+    handle_error("open");
+    return;
   }
 
   int result;
   ssize_t bytes_read =
     read(pipefd[0], &result, sizeof(result));
   if (bytes_read == -1) {
-    handle_error("read", EXIT_FAILURE);
+    handle_error("read");
   } else if (bytes_read > 0) {
     printf("new number - %d\n", result);
     if (lseek(fd, 0, SEEK_END) == -1) {
-      handle_error("lseek", EXIT_FAILURE);
-    }
-    if (write(fd, &result, sizeof(result)) == -1) {
-      handle_error("write", EXIT_FAILURE);
+      handle_error("lseek");
+    } else if (write(fd, &result, sizeof(result)) == -1) {
+      handle_error("write");
     }
   }
 
@@ -149,20 +172,8 @@ parent_handler(int pipefd[])
   close(fd);
 }
 
-char*
-file_editor_menu()
-{
-  output_wrapped_title("File Editor Menu", 50, '-');
-
-  fputs("Enter the identification number and the new "
-        "value.\nIn this format "
-        "(ID - new value)\nInput: ",
-        stdout);
-  return input_string();
-}
-
 int
-main(int argc, char* argv[])
+main()
 {
   int pipefd[2];
   if (pipe(pipefd) == -1) {

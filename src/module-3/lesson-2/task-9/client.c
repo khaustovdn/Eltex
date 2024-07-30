@@ -1,26 +1,33 @@
 #include <fcntl.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/sem.h>
+#include <sys/types.h>
 #include <sys/wait.h>
 #include <time.h>
-
-#include "client.h"
+#include <unistd.h>
 
 void
-handle_error(const char* msg, int exit_code)
+handle_error(const char* msg)
 {
   perror(msg);
-  exit(exit_code);
 }
 
 void
 child_handler(int pipefd[])
 {
   key_t key = ftok("/etc/fstab", 1);
+  if (key == -1) {
+    handle_error("ftok");
+    return;
+  }
+
   int semid = semget(key, 2, 0);
+  if (semid == -1) {
+    handle_error("semget");
+    return;
+  }
 
   struct sembuf lock_res = { 0, -1, 0 };
   struct sembuf rel_res = { 0, 1, 0 };
@@ -30,62 +37,60 @@ child_handler(int pipefd[])
   int result;
   for (int i = 1;; i++) {
     if (semop(semid, &lock_res, 1) == -1) {
-      handle_error("semget (lock_res)", EXIT_FAILURE);
+      handle_error("semop (lock_res)");
+      break;
     }
     if (semop(semid, &push, 2) == -1) {
-      handle_error("semget (lock_res)", EXIT_FAILURE);
+      handle_error("semop (push)");
+      break;
     }
+
     int fd = open("file.bin", O_RDONLY);
     if (fd == -1) {
-      handle_error("open", EXIT_FAILURE);
+      handle_error("open");
+      semop(semid, &rel_res, 1);
+      break;
     }
 
     if (lseek(fd, sizeof(int) * (i - 1), SEEK_SET) == -1) {
-      handle_error("lseek", EXIT_FAILURE);
+      handle_error("lseek");
+      close(fd);
+      semop(semid, &rel_res, 1);
+      break;
     }
+
     ssize_t bytes_read = read(fd, &result, sizeof(result));
     if (bytes_read == -1) {
-      handle_error("read", EXIT_FAILURE);
+      handle_error("read");
+      close(fd);
+      semop(semid, &rel_res, 1);
+      break;
     } else if (bytes_read == 0) {
-      if (close(fd) == -1) {
-        handle_error("close", EXIT_FAILURE);
-      }
-
-      if (semop(semid, &rel_res, 1) == -1) {
-        handle_error("semget (rel_res)", EXIT_FAILURE);
-      }
+      close(fd);
+      semop(semid, &rel_res, 1);
       break;
     }
 
     printf("%d - %d\n", i, result);
     usleep(50000);
 
-    if (close(fd) == -1) {
-      handle_error("close", EXIT_FAILURE);
-    }
-
-    if (semop(semid, &rel_res, 1) == -1) {
-      handle_error("semget (rel_res)", EXIT_FAILURE);
-    }
+    close(fd);
+    semop(semid, &rel_res, 1);
   }
 
-  if (close(pipefd[0]) == -1) {
-    handle_error("close", EXIT_FAILURE);
-  }
+  close(pipefd[0]);
 
   srand((unsigned)time(NULL));
   result = rand() % 100;
   if (write(pipefd[1], &result, sizeof(result)) == -1) {
-    handle_error("write", EXIT_FAILURE);
+    handle_error("write");
   }
 
-  if (close(pipefd[1]) == -1) {
-    handle_error("close", EXIT_FAILURE);
-  }
+  close(pipefd[1]);
 }
 
 int
-main(int argc, char* argv[])
+main()
 {
   int pipefd[2];
   if (pipe(pipefd) == -1) {
