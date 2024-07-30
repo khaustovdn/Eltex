@@ -48,7 +48,7 @@ handle_error(const char* msg, int exit_code)
 void
 update_file(int fd, const char* id, const char* new_value)
 {
-  if (lseek(fd, sizeof(int) * (atoi(id)), SEEK_SET) == -1) {
+  if (lseek(fd, sizeof(int) * (atoi(id) - 1), SEEK_SET) == -1) {
     handle_error("lseek", EXIT_FAILURE);
   }
 
@@ -59,7 +59,7 @@ update_file(int fd, const char* id, const char* new_value)
 }
 
 void
-parent_handler(pid_t pid, int pipefd[])
+parent_handler(int pipefd[])
 {
   key_t key = ftok("prof", 1);
   int semid = semget(key, 1, 0666 | IPC_CREAT);
@@ -158,25 +158,32 @@ child_handler(int pipefd[])
       handle_error("open", EXIT_FAILURE);
     }
 
-    if (lseek(fd, sizeof(int) * i, SEEK_SET) == -1) {
+    if (lseek(fd, sizeof(int) * (i - 1), SEEK_SET) == -1) {
       handle_error("lseek", EXIT_FAILURE);
     }
     ssize_t bytes_read = read(fd, &result, sizeof(result));
     if (bytes_read == -1) {
       handle_error("read", EXIT_FAILURE);
     } else if (bytes_read == 0) {
+      if (close(fd) == -1) {
+        handle_error("close", EXIT_FAILURE);
+      }
+
+      if (semop(semid, &rel_res, 1) == -1) {
+        handle_error("semget (rel_res)", EXIT_FAILURE);
+      }
       break;
     }
 
     printf("%d - %d\n", i, result);
     usleep(50000);
 
-    if (semop(semid, &rel_res, 1) == -1) {
-      handle_error("semget (rel_res)", EXIT_FAILURE);
-    }
-
     if (close(fd) == -1) {
       handle_error("close", EXIT_FAILURE);
+    }
+
+    if (semop(semid, &rel_res, 1) == -1) {
+      handle_error("semget (rel_res)", EXIT_FAILURE);
     }
   }
 
@@ -226,7 +233,7 @@ main(int argc, char* argv[])
       break;
     }
     default:
-      parent_handler(pid, pipefd);
+      parent_handler(pipefd);
       break;
   }
 

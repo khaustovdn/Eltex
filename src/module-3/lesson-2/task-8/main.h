@@ -13,7 +13,7 @@ void
 update_file(int fd, const char* id, const char* new_value);
 
 void
-parent_handler(pid_t pid, int pipefd[]);
+parent_handler(int pipefd[]);
 
 void
 child_handler(int pipefd[]);
