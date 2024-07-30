@@ -10,5 +10,5 @@
    - ### Lesson 2
      - [X] task 6
      - [X] task 7
-     - [ ] task 8
+     - [X] task 8
      - [ ] task 9
