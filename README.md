@@ -11,4 +11,4 @@
      - [X] task 6
      - [X] task 7
      - [X] task 8
-     - [ ] task 9
+     - [X] task 9
