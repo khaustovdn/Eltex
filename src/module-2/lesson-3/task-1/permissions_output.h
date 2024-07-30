@@ -1,7 +1,6 @@
 #ifndef PERMISSIONS_OUTPUT_H_
 #define PERMISSIONS_OUTPUT_H_
 
-#include "../../utils/utils.h"
 #include <sys/types.h>
 
 typedef char* (*output_action)(mode_t mode);
