@@ -13,9 +13,6 @@ void
 listener(int sig);
 
 void
-process_child(int fd, int pipefd[]);
-
-void
 update_file(int fd, const char* id, const char* new_value);
 
 void

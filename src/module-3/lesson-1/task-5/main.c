@@ -44,41 +44,6 @@ listener(int sig)
 }
 
 void
-process_child(int fd, int pipefd[])
-{
-  int result;
-  for (int i = 1;; i++) {
-    ssize_t bytes_read = read(fd, &result, sizeof(result));
-    if (bytes_read == -1) {
-      handle_error("read", EXIT_FAILURE);
-    } else if (bytes_read == 0) {
-      break;
-    }
-
-    while (!is_available) {
-      pause();
-    }
-
-    printf("%d - %d\n", i, result);
-    usleep(50000);
-  }
-
-  if (close(fd) == -1 || close(pipefd[0]) == -1) {
-    handle_error("close", EXIT_FAILURE);
-  }
-
-  srand((unsigned)time(NULL));
-  result = rand() % 100;
-  if (write(pipefd[1], &result, sizeof(result)) == -1) {
-    handle_error("write", EXIT_FAILURE);
-  }
-
-  if (close(pipefd[1]) == -1) {
-    handle_error("close", EXIT_FAILURE);
-  }
-}
-
-void
 update_file(int fd, const char* id, const char* new_value)
 {
   if (lseek(fd, sizeof(int) * (atoi(id) - 1), SEEK_SET) ==
@@ -171,7 +136,44 @@ child_handler(int pipefd[])
   if (fd == -1) {
     handle_error("open", EXIT_FAILURE);
   }
-  process_child(fd, pipefd);
+  int result;
+  for (int i = 1;; i++) {
+    ssize_t bytes_read = read(fd, &result, sizeof(result));
+    if (bytes_read == -1) {
+      handle_error("read", EXIT_FAILURE);
+    } else if (bytes_read == 0) {
+      break;
+    }
+
+    while (!is_available) {
+      close(fd);
+      pause();
+      int fd = open("file.bin", O_RDONLY);
+      if (fd == -1) {
+        handle_error("open", EXIT_FAILURE);
+      }
+      if (lseek(fd, sizeof(int) * i, SEEK_SET) == -1) {
+        handle_error("lseek", EXIT_FAILURE);
+      }
+    }
+
+    printf("%d - %d\n", i, result);
+    usleep(50000);
+  }
+
+  if (close(fd) == -1 || close(pipefd[0]) == -1) {
+    handle_error("close", EXIT_FAILURE);
+  }
+
+  srand((unsigned)time(NULL));
+  result = rand() % 100;
+  if (write(pipefd[1], &result, sizeof(result)) == -1) {
+    handle_error("write", EXIT_FAILURE);
+  }
+
+  if (close(pipefd[1]) == -1) {
+    handle_error("close", EXIT_FAILURE);
+  }
 }
 
 char*
