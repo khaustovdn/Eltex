@@ -55,7 +55,9 @@ process_child(int fd, int pipefd[])
 
   int result;
   for (int i = 1;; i++) {
-    semop(semid, &lock_res, 1);
+    if (semop(semid, &lock_res, 1) == -1) {
+      handle_error("semget (lock_res)", EXIT_FAILURE);
+    }
 
     ssize_t bytes_read = read(fd, &result, sizeof(result));
     if (bytes_read == -1) {
@@ -67,7 +69,9 @@ process_child(int fd, int pipefd[])
     printf("%d - %d\n", i, result);
     usleep(50000);
 
-    semop(semid, &rel_res, 1);
+    if (semop(semid, &rel_res, 1) == -1) {
+      handle_error("semget (rel_res)", EXIT_FAILURE);
+    }
   }
 
   if (close(fd) == -1 || close(pipefd[0]) == -1) {
@@ -114,7 +118,9 @@ parent_handler(pid_t pid, int pipefd[])
   }
 
   sleep(2);
-  semop(semid, &lock_res, 1);
+  if (semop(semid, &lock_res, 1) == -1) {
+    handle_error("semget (lock_res)", EXIT_FAILURE);
+  }
 
   int fd = open("file.bin", O_CREAT | O_WRONLY, 0666);
   if (fd == -1) {
@@ -146,7 +152,9 @@ parent_handler(pid_t pid, int pipefd[])
   }
 
   close(fd);
-  semop(semid, &rel_res, 1);
+  if (semop(semid, &rel_res, 1) == -1) {
+    handle_error("semget (rel_res)", EXIT_FAILURE);
+  }
 
   wait(NULL);
 
