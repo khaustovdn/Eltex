@@ -1,28 +1,41 @@
-#include <fcntl.h>
+#include "../../../utils/utils.h"
+
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <sys/ipc.h>
 #include <sys/sem.h>
 #include <sys/types.h>
-#include <sys/wait.h>
+
+#include <fcntl.h>
 #include <unistd.h>
 
-#include "../../../utils/utils.h"
-
-#if defined(__GNU_LIBRARY__) &&                            \
-  !defined(_SEM_SEMUN_UNDEFINED)
-/* union semun is defined by including <sys/sem.h> */
-#else
-/* according to X/OPEN we have to define it ourselves */
-union semun
+void
+handle_error(const char* msg, int exit_code)
 {
-  int val;               /* value for SETVAL */
-  struct semid_ds* buf;  /* buffer for IPC_STAT, IPC_SET */
-  unsigned short* array; /* array for GETALL, SETALL */
-                         /* Linux specific part: */
-  struct seminfo* __buf; /* buffer for IPC_INFO */
-};
-#endif
+  perror(msg);
+  exit(exit_code);
+}
+
+void
+update_file(int fd, const char* id, const char* new_value)
+{
+  if (lseek(fd, sizeof(int) * (atoi(id) - 1), SEEK_SET) ==
+      -1) {
+    handle_error("set_file_offset", EXIT_FAILURE);
+  }
+
+  int result = atoi(new_value);
+
+  ssize_t bytes_written =
+    write(fd, &result, sizeof(result));
+
+  if (bytes_written == -1) {
+    handle_error("write_file", EXIT_FAILURE);
+  }
+}
 
 void
 remove_spaces(char* str)
@@ -37,33 +50,6 @@ remove_spaces(char* str)
   *dst = '\0';
 }
 
-void
-handle_error(const char* msg)
-{
-  perror(msg);
-}
-
-void
-update_file(int fd, const char* id, const char* new_value)
-{
-  int record_id = atoi(id);
-  if (record_id <= 0) {
-    fprintf(stderr, "Invalid ID: %s\n", id);
-    return;
-  }
-
-  if (lseek(fd, sizeof(int) * (record_id - 1), SEEK_SET) ==
-      -1) {
-    handle_error("lseek");
-    return;
-  }
-
-  int result = atoi(new_value);
-  if (write(fd, &result, sizeof(result)) == -1) {
-    handle_error("write");
-  }
-}
-
 char*
 file_editor_menu()
 {
@@ -76,47 +62,45 @@ file_editor_menu()
 }
 
 void
-parent_handler(int pipefd[])
+server_handler(int fifofd)
 {
-  key_t key = ftok("/etc/fstab", 1);
-  if (key == -1) {
-    handle_error("ftok");
-    return;
-  }
+  key_t key = ftok("/etc/vimrc", '.');
 
   int semid = semget(key, 2, 0666 | IPC_CREAT);
   if (semid == -1) {
-    handle_error("semget");
-    return;
+    handle_error("semget (create)", EXIT_FAILURE);
   }
 
-  struct sembuf lock_res = { 0, -1, 0 };
-  struct sembuf rel_res = { 0, 1, 0 };
-  union semun arg;
+  struct sembuf lock = { 0, -1, 0 };
+  struct sembuf unlock = { 0, 1, 0 };
+  struct sembuf wait_all_clients = { 1, -2, 0 };
+
+  union semun
+  {
+    int val;
+    struct semid_ds* buf;
+    unsigned short* array;
+    struct seminfo* __buf;
+  } arg;
+
   arg.val = 1;
   if (semctl(semid, 0, SETVAL, arg) == -1) {
-    handle_error("semctl (setval 0)");
-    return;
-  }
-  arg.val = 2;
-  if (semctl(semid, 1, SETVAL, arg) == -1) {
-    handle_error("semctl (setval 1)");
-    return;
+    handle_error("semctl (init)", EXIT_FAILURE);
   }
 
-  close(pipefd[1]);
+  arg.val = 0;
+  if (semctl(semid, 1, SETVAL, arg) == -1) {
+    handle_error("semctl (init)", EXIT_FAILURE);
+  }
 
   sleep(2);
-  if (semop(semid, &lock_res, 1) == -1) {
-    handle_error("semop (lock_res)");
-    return;
+  if (semop(semid, &lock, 1) == -1) {
+    handle_error("semop (lock)", EXIT_FAILURE);
   }
 
   int fd = open("file.bin", O_CREAT | O_WRONLY, 0666);
   if (fd == -1) {
-    handle_error("open");
-    semop(semid, &rel_res, 1);
-    return;
+    handle_error("open_file_write", EXIT_FAILURE);
   }
 
   char* action_choice;
@@ -132,7 +116,7 @@ parent_handler(int pipefd[])
 
     if (id == NULL || new_value == NULL) {
       puts("Warning: Invalid input format");
-    } else if (!is_unsigned(id)) {
+    } else if (!is_unsigned(id) || atoi(id) == 0) {
       puts("Warning: ID is not a valid positive number");
     } else if (!is_integer(new_value)) {
       puts("Warning: Value is not a valid number");
@@ -143,45 +127,65 @@ parent_handler(int pipefd[])
     free(action_choice);
   }
 
-  close(fd);
-  semop(semid, &rel_res, 1);
+  if (close(fd) == -1) {
+    handle_error("close_file", EXIT_FAILURE);
+  }
 
-  wait(NULL);
+  if (semop(semid, &unlock, 1) == -1) {
+    handle_error("semop (unlock)", EXIT_FAILURE);
+  }
+
+  if (semop(semid, &wait_all_clients, 1) == -1) {
+    handle_error("semop (wait_all_clients)", EXIT_FAILURE);
+  }
 
   fd = open("file.bin", O_APPEND | O_WRONLY, 0666);
   if (fd == -1) {
-    handle_error("open");
-    return;
+    handle_error("open_file_append", EXIT_FAILURE);
   }
 
-  int result;
-  ssize_t bytes_read =
-    read(pipefd[0], &result, sizeof(result));
-  if (bytes_read == -1) {
-    handle_error("read");
-  } else if (bytes_read > 0) {
-    printf("new number - %d\n", result);
-    if (lseek(fd, 0, SEEK_END) == -1) {
-      handle_error("lseek");
-    } else if (write(fd, &result, sizeof(result)) == -1) {
-      handle_error("write");
+  for (;;) {
+    int result;
+    ssize_t bytes_read =
+      read(fifofd, &result, sizeof(result));
+    if (bytes_read == -1) {
+      handle_error("read_pipe", EXIT_FAILURE);
+    } else if (bytes_read > 0) {
+      printf("new number - %d\n", result);
+
+      if (lseek(fd, 0, SEEK_END) == -1) {
+        handle_error("set_file_offset_end", EXIT_FAILURE);
+      }
+
+      ssize_t bytes_written =
+        write(fd, &result, sizeof(result));
+      if (bytes_written == -1) {
+        handle_error("write_file", EXIT_FAILURE);
+      }
+    } else {
+      puts("files successfully read");
+      break;
     }
   }
 
-  close(pipefd[0]);
-  close(fd);
+  if (close(fifofd) == -1) {
+    handle_error("close_file", EXIT_FAILURE);
+  }
+
+  if (close(fd) == -1) {
+    handle_error("close_file", EXIT_FAILURE);
+  }
 }
 
 int
-main()
+main(int argc, char* argv[])
 {
-  int pipefd[2];
-  if (pipe(pipefd) == -1) {
-    perror("pipe");
-    exit(EXIT_FAILURE);
+  int fifofd = open("/tmp/fifo", O_CREAT | O_RDONLY, 0666);
+  if (fifofd == -1) {
+    handle_error("fifo", EXIT_FAILURE);
   }
 
-  parent_handler(pipefd);
+  server_handler(fifofd);
 
   return EXIT_SUCCESS;
 }
