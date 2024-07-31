@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <mqueue.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <sys/types.h>
@@ -10,6 +11,11 @@
 #include <fcntl.h>
 #include <time.h>
 #include <unistd.h>
+
+#define QUEUE_NAME "/base-queue"
+#define MESSAGE_PRIORITY 1
+#define MAX_MESSAGES 10
+#define QUEUE_PERMISSIONS 0660
 
 void
 handle_error(const char* msg, int exit_code)
@@ -19,7 +25,7 @@ handle_error(const char* msg, int exit_code)
 }
 
 void
-client_handler(int fifofd)
+client_handler(mqd_t qd)
 {
   key_t key = ftok("/etc/vimrc", '.');
   int semid = semget(key, 2, 0);
@@ -72,12 +78,15 @@ client_handler(int fifofd)
   srand((unsigned)time(NULL));
   result = rand() % 100;
   printf("new number - %d\n", result);
-  if (write(fifofd, &result, sizeof(result)) == -1) {
-    handle_error("write", EXIT_FAILURE);
+  if (mq_send(qd,
+              (const char*)&result,
+              sizeof(result),
+              MESSAGE_PRIORITY) == -1) {
+    perror("mq_send");
   }
 
-  if (close(fifofd) == -1) {
-    handle_error("close", EXIT_FAILURE);
+  if (mq_close(qd) == -1) {
+    handle_error("mq_close", EXIT_FAILURE);
   }
 
   if (semop(semid, &completed, 1) == -1) {
@@ -88,12 +97,12 @@ client_handler(int fifofd)
 int
 main(int argc, char* argv[])
 {
-  int fifofd = open("/tmp/fifo", O_WRONLY, 0666);
-  if (fifofd == -1) {
-    handle_error("fifo", EXIT_FAILURE);
+  mqd_t qd = mq_open(QUEUE_NAME, O_WRONLY);
+  if (qd == (mqd_t)-1) {
+    handle_error("mq_open", EXIT_FAILURE);
   }
 
-  client_handler(fifofd);
+  client_handler(qd);
 
   return EXIT_SUCCESS;
 }

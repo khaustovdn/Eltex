@@ -5,12 +5,18 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <mqueue.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <sys/types.h>
 
 #include <fcntl.h>
 #include <unistd.h>
+
+#define QUEUE_NAME "/base-queue"
+#define MESSAGE_PRIORITY 1
+#define MAX_MESSAGES 10
+#define QUEUE_PERMISSIONS 0660
 
 void
 handle_error(const char* msg, int exit_code)
@@ -62,7 +68,7 @@ file_editor_menu()
 }
 
 void
-server_handler(int fifofd)
+server_handler(mqd_t qd)
 {
   key_t key = ftok("/etc/vimrc", '.');
 
@@ -145,31 +151,36 @@ server_handler(int fifofd)
   }
 
   for (;;) {
-    int result;
-    ssize_t bytes_read =
-      read(fifofd, &result, sizeof(result));
+    unsigned int priority;
+    int message;
+
+    ssize_t bytes_read = mq_receive(
+      qd, (char*)&message, sizeof(message), &priority);
     if (bytes_read == -1) {
-      handle_error("read_pipe", EXIT_FAILURE);
+      puts("files successfully read");
+      break;
+
     } else if (bytes_read > 0) {
-      printf("new number - %d\n", result);
+      printf("new number - %d\n", message);
 
       if (lseek(fd, 0, SEEK_END) == -1) {
         handle_error("set_file_offset_end", EXIT_FAILURE);
       }
 
       ssize_t bytes_written =
-        write(fd, &result, sizeof(result));
+        write(fd, &message, sizeof(message));
       if (bytes_written == -1) {
         handle_error("write_file", EXIT_FAILURE);
       }
-    } else {
-      puts("files successfully read");
-      break;
     }
   }
 
-  if (close(fifofd) == -1) {
-    handle_error("close_file", EXIT_FAILURE);
+  if (mq_close(qd) == -1) {
+    handle_error("mq_close", EXIT_FAILURE);
+  }
+
+  if (mq_unlink(QUEUE_NAME) == -1) {
+    handle_error("mq_unlink", EXIT_FAILURE);
   }
 
   if (close(fd) == -1) {
@@ -180,12 +191,20 @@ server_handler(int fifofd)
 int
 main(int argc, char* argv[])
 {
-  int fifofd = open("/tmp/fifo", O_CREAT | O_RDONLY, 0666);
-  if (fifofd == -1) {
-    handle_error("fifo", EXIT_FAILURE);
+  struct mq_attr queue_attr = { .mq_flags = 0,
+                                .mq_maxmsg = MAX_MESSAGES,
+                                .mq_msgsize = sizeof(int),
+                                .mq_curmsgs = 0 };
+
+  mqd_t qd = mq_open(QUEUE_NAME,
+                     O_RDWR | O_CREAT | O_NONBLOCK,
+                     QUEUE_PERMISSIONS,
+                     &queue_attr);
+  if (qd == (mqd_t)-1) {
+    handle_error("mq_open", EXIT_FAILURE);
   }
 
-  server_handler(fifofd);
+  server_handler(qd);
 
   return EXIT_SUCCESS;
 }
