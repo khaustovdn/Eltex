@@ -24,11 +24,15 @@ main(int argc, char* argv[])
 
   for (int i = 1; i < argc; i++) {
     if (is_integer(argv[i]) == false) {
-      printf("The \"%s\" argument numbered %d is not a number\n", argv[i], i);
+      printf(
+        "The \"%s\" argument numbered %d is not a number\n",
+        argv[i],
+        i);
       continue;
     }
     *(int*)result.value =
-      (result.success == false || *(int*)result.value < atoi(argv[i]))
+      (result.success == false ||
+       *(int*)result.value < atoi(argv[i]))
         ? atoi(argv[i])
         : *(int*)result.value;
     result.success = true;

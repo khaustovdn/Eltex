@@ -25,14 +25,17 @@ main(int argc, char* argv[])
 
   for (int i = 1; i < argc; i++) {
     strncpy(result.value,
-            (result.success == false || strlen(result.value) < strlen(argv[i]))
+            (result.success == false ||
+             strlen(result.value) < strlen(argv[i]))
               ? argv[i]
               : result.value,
             MAX_LEN);
     result.success = true;
   }
 
-  printf("Result: %s. Count: %lu\n", (char*)result.value, strlen(result.value));
+  printf("Result: %s. Count: %lu\n",
+         (char*)result.value,
+         strlen(result.value));
 
   free(result.value);
   return EXIT_SUCCESS;

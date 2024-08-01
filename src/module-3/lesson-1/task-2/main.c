@@ -14,7 +14,8 @@ parse_command(char* action_choice, int* arg_count)
   if (token == NULL)
     return NULL;
 
-  char** prog_argv = (char**)malloc(MAX_LEN * sizeof(char*));
+  char** prog_argv =
+    (char**)malloc(MAX_LEN * sizeof(char*));
   if (prog_argv == NULL) {
     perror("Error: Memory allocation failed.\n");
     exit(EXIT_FAILURE);
@@ -28,7 +29,8 @@ parse_command(char* action_choice, int* arg_count)
       break;
     }
 
-    prog_argv[*arg_count] = (char*)malloc((strlen(token) + 1) * sizeof(char));
+    prog_argv[*arg_count] =
+      (char*)malloc((strlen(token) + 1) * sizeof(char));
     if (prog_argv[*arg_count] == NULL) {
       perror("Error: Memory allocation failed.\n");
       for (int i = 0; i < *arg_count; i++) {
@@ -51,12 +53,6 @@ parse_command(char* action_choice, int* arg_count)
 int
 main(int argc, char* argv[])
 {
-  CommandEntry commands[] = { { "summator", "summator" },
-                              { "string-joiner", "string_joiner" },
-                              { "max-number-finder", "max_number_finder" },
-                              { "max-line-finder", "max_line_finder" },
-                              { NULL, NULL } };
-
   char* action_choice;
 
   for (;;) {
@@ -68,7 +64,8 @@ main(int argc, char* argv[])
     }
 
     int arg_count;
-    char** prog_argv = parse_command(action_choice, &arg_count);
+    char** prog_argv =
+      parse_command(action_choice, &arg_count);
 
     if (prog_argv == NULL) {
       puts("Invalid command format.");
@@ -76,31 +73,24 @@ main(int argc, char* argv[])
       continue;
     }
 
-    int i = 0;
-    for (; commands[i].name != NULL; i++) {
-      if (strncmp(prog_argv[0], commands[i].name, MAX_LEN) == 0) {
-        int pid = fork();
-        switch (pid) {
-          case -1:
-            perror("Fork");
-            break;
-          case 0:
-            if (execv(commands[i].property, prog_argv) == -1)
-              perror("Execv");
-            break;
-          default:
-            wait(NULL);
-            break;
+    int pid = fork();
+    switch (pid) {
+      case -1:
+        puts("Fork");
+        break;
+      case 0:
+        if (execv(prog_argv[0], prog_argv) == -1) {
+          puts("Invalid choice of action");
+          exit(EXIT_FAILURE);
         }
         break;
-      }
+      default:
+        wait(NULL);
+        break;
     }
 
-    if (commands[i].name == NULL)
-      puts("Invalid choice of action");
-
-    for (int j = 0; j < arg_count; j++) {
-      free(prog_argv[j]);
+    for (int i = 0; i < arg_count; i++) {
+      free(prog_argv[i]);
     }
     free(prog_argv);
     free(action_choice);
@@ -114,8 +104,10 @@ command_interpreter_menu()
 {
   output_wrapped_title("Command Interpreter Menu", 50, '-');
 
-  fputs("Choose an command:\n\t- summator\n\t- string-joiner\n\t"
-        "- max-number-finder\n\t- max-line-finder\n\tq. Quit\nInput: ",
+  fputs("Choose an command:\n\t- summator\n\t- "
+        "string-joiner\n\t"
+        "- max-number-finder\n\t- max-line-finder\n\tq. "
+        "Quit\nInput: ",
         stdout);
   return input_string();
 }

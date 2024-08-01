@@ -15,7 +15,10 @@ main(int argc, char* argv[])
   int result = 0;
   for (int i = 1; i < argc; i++) {
     if (is_integer(argv[i]) == false) {
-      printf("The \"%s\" argument numbered %d is not a number\n", argv[i], i);
+      printf(
+        "The \"%s\" argument numbered %d is not a number\n",
+        argv[i],
+        i);
       continue;
     }
     result += atoi(argv[i]);
