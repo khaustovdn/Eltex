@@ -15,5 +15,5 @@
    - ### Lesson 3
      - [X] task 10
      - [X] task 11
-     - [ ] task 12
-     - [ ] task 13
+     - [X] task 12
+     - [X] task 13
