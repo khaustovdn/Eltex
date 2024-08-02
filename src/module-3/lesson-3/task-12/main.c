@@ -62,14 +62,15 @@ parent_handler(int semid, int shmid_in, int shmid_out)
       printf("%d ", shm_in[i]);
     }
     printf("\n");
-    shm_in[MAX_LEN] =
-      count;
+    shm_in[MAX_LEN] = count;
 
     shmdt(shm_in);
 
     if (semop(semid, &rel_res, 1) == -1) {
       handle_error("semop (rel_res)", EXIT_FAILURE);
     }
+
+    usleep(10000);
 
     if (semop(semid, &lock_res, 1) == -1) {
       handle_error("semop (lock_res)", EXIT_FAILURE);

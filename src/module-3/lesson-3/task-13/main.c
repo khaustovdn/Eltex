@@ -45,12 +45,13 @@ parent_handler(sem_t* sem, int* shm_in, int* shm_out)
       printf("%d ", shm_in[i]);
     }
     printf("\n");
-    shm_in[MAX_LEN] =
-      count; // Store count at the end of array
+    shm_in[MAX_LEN] = count;
 
     if (sem_post(sem) == -1) {
       handle_error("sem_post (parent)");
     }
+
+    usleep(10000);
 
     if (sem_wait(sem) == -1) {
       handle_error("sem_wait (parent)");
