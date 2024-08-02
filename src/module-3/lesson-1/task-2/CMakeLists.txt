@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.30)
+cmake_minimum_required(VERSION 3.28)
 project(eltex)
 
 add_executable(eltex
@@ -21,12 +21,12 @@ add_executable(summator
   ./summator.c
   ./summator.h)
 
-add_library(libutils STATIC
+add_library(utils STATIC
   ../../../utils/utils.c
   ../../../utils/utils.h)
 
-target_link_libraries(eltex PRIVATE libutils)
-target_link_libraries(max_line_finder PRIVATE libutils)
-target_link_libraries(max_number_finder PRIVATE libutils)
-target_link_libraries(string_joiner PRIVATE libutils)
-target_link_libraries(summator PRIVATE libutils)
+target_link_libraries(eltex PRIVATE utils)
+target_link_libraries(max_line_finder PRIVATE utils)
+target_link_libraries(max_number_finder PRIVATE utils)
+target_link_libraries(string_joiner PRIVATE utils)
+target_link_libraries(summator PRIVATE utils)

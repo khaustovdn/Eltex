@@ -8,5 +8,4 @@ add_library(utils STATIC
   ../../../utils/utils.c
   ../../../utils/utils.h)
 
-target_link_libraries(server PRIVATE utils)
-target_link_libraries(client PRIVATE utils)
+target_link_libraries(server PRIVATE utils rt pthread)

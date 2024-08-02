@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.30)
+cmake_minimum_required(VERSION 3.28)
 project(eltex)
 
 add_executable(eltex
@@ -9,8 +9,8 @@ add_executable(eltex
   phonebook.c
   phonebook.h)
 
-add_library(libutils STATIC
+add_library(utils STATIC
   ../../../utils/utils.c
   ../../../utils/utils.h)
 
-target_link_libraries(eltex PRIVATE libutils)
+target_link_libraries(eltex PRIVATE utils)
