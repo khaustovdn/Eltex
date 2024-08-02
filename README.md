@@ -12,3 +12,8 @@
      - [X] task 7
      - [X] task 8
      - [X] task 9
+   - ### Lesson 3
+     - [X] task 10
+     - [X] task 11
+     - [ ] task 12
+     - [ ] task 13
