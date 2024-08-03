@@ -56,10 +56,14 @@ void
 handle_registration(int server_fd,
                     Client* clients,
                     int* client_count,
-                    int id,
+                    char* buffer,
+                    int n,
                     struct sockaddr_in* client_addr,
                     socklen_t client_addrlen)
 {
+  int id;
+  memcpy(&id, buffer, sizeof(int));
+
   for (int i = 0; i < *client_count; i++) {
     if (id == clients[i].id) {
       int response = 0;
@@ -88,6 +92,22 @@ handle_registration(int server_fd,
              client_addrlen) == -1)
     handle_error("sendto");
 
+  strncpy(
+    buffer + sizeof(int), "logged into the chat", MAX_LEN);
+  n = sizeof(int) + strlen("logged out of the chat");
+
+  for (int i = 0; i < *client_count; i++) {
+    if (clients[i].id != id) {
+      if (sendto(server_fd,
+                 buffer,
+                 n,
+                 MSG_CONFIRM,
+                 (struct sockaddr*)&clients[i].addr,
+                 clients[i].addrlen) == -1)
+        handle_error("sendto");
+    }
+  }
+
   printf("User %d: has successfully registered\n", id);
 }
 
@@ -98,7 +118,8 @@ handle_message(int server_fd,
                char* buffer,
                int n,
                struct sockaddr_in* client_addr,
-               socklen_t client_addrlen)
+               socklen_t client_addrlen,
+               int* active_client)
 {
   int id;
   memcpy(&id, buffer, sizeof(int));
@@ -133,6 +154,9 @@ handle_message(int server_fd,
         handle_error("sendto");
     }
   }
+
+  *active_client =
+    (id == clients[0].id) ? clients[1].id : clients[0].id;
 }
 
 void
@@ -143,6 +167,7 @@ start_server()
   int client_count = 0;
   char buffer[MAX_LEN];
   int server_fd;
+  int active_client = -1; // ID активного клиента
 
   initialize_server(&server_fd, &server_addr);
 
@@ -164,17 +189,25 @@ start_server()
       handle_registration(server_fd,
                           clients,
                           &client_count,
-                          id,
+                          buffer,
+                          n,
                           &client_addr,
                           client_addrlen);
+      if (client_count == 1) {
+        active_client = id;
+      }
     } else {
+      if (id != active_client) {
+        continue;
+      }
       handle_message(server_fd,
                      clients,
                      &client_count,
                      buffer,
                      n,
                      &client_addr,
-                     client_addrlen);
+                     client_addrlen,
+                     &active_client);
     }
   }
   close(server_fd);

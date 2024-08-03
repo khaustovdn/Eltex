@@ -95,6 +95,23 @@ send_message(int client_fd,
   char buffer[MAX_LEN];
 
   while (true) {
+    memset(buffer, '\0', MAX_LEN);
+
+    output_wrapped_title("Output", 30, '-');
+
+    int n = recvfrom(client_fd,
+                     buffer,
+                     MAX_LEN,
+                     MSG_WAITALL,
+                     (struct sockaddr*)server_addr,
+                     &server_addrlen);
+    if (n == -1)
+      handle_error("recvfrom");
+
+    int id;
+    memcpy(&id, buffer, sizeof(int));
+    printf("User %d: %s\n", id, buffer + sizeof(int));
+
     char* message = client_menu();
 
     memset(buffer, '\0', MAX_LEN);
@@ -118,22 +135,6 @@ send_message(int client_fd,
     }
 
     free(message);
-    memset(buffer, '\0', MAX_LEN);
-
-    output_wrapped_title("Output", 30, '-');
-
-    int n = recvfrom(client_fd,
-                     buffer,
-                     MAX_LEN,
-                     MSG_WAITALL,
-                     (struct sockaddr*)server_addr,
-                     &server_addrlen);
-    if (n == -1)
-      handle_error("recvfrom");
-
-    int id;
-    memcpy(&id, buffer, sizeof(int));
-    printf("User %d: %s\n", id, buffer + sizeof(int));
   }
 }
 
