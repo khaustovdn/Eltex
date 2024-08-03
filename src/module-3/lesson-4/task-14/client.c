@@ -1,4 +1,5 @@
 #include <netinet/in.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -26,43 +27,54 @@ client_menu()
 }
 
 void
-start_client(int client_id)
+initialize_client(int* client_fd,
+                  struct sockaddr_in* server_addr)
 {
-  struct sockaddr_in server_addr;
-  char buffer[MAX_LEN];
   int opt = 1;
 
-  int client_fd = socket(AF_INET, SOCK_DGRAM, 0);
-  if (client_fd == -1)
+  *client_fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+  if (*client_fd == -1)
     handle_error("socket");
 
-  if (setsockopt(client_fd,
+  if (setsockopt(*client_fd,
                  SOL_SOCKET,
                  SO_REUSEADDR | SO_REUSEPORT,
                  &opt,
                  sizeof(opt)) == -1)
     handle_error("setsockopt");
 
-  server_addr.sin_family = AF_INET;
-  server_addr.sin_addr.s_addr =
+  server_addr->sin_family = AF_INET;
+  server_addr->sin_addr.s_addr =
     htonl(0x7f000001); // 127.0.0.1
-  server_addr.sin_port = htons(PORT);
+  server_addr->sin_port = htons(PORT);
+}
 
-  socklen_t server_addrlen = sizeof(server_addr);
-  sendto(client_fd,
-         &client_id,
-         sizeof(int),
-         MSG_CONFIRM,
-         (struct sockaddr*)&server_addr,
-         server_addrlen);
+void
+register_client(int client_fd,
+                int client_id,
+                struct sockaddr_in* server_addr,
+                socklen_t server_addrlen)
+{
+  char buffer[MAX_LEN];
+
+  if (sendto(client_fd,
+             &client_id,
+             sizeof(int),
+             MSG_CONFIRM,
+             (struct sockaddr*)server_addr,
+             server_addrlen) == -1)
+    handle_error("sendto");
 
   int n = recvfrom(client_fd,
                    buffer,
                    MAX_LEN,
                    MSG_WAITALL,
-                   (struct sockaddr*)&server_addr,
+                   (struct sockaddr*)server_addr,
                    &server_addrlen);
-  int id = 0;
+  if (n == -1)
+    handle_error("recvfrom");
+
+  int id;
   memcpy(&id, buffer, sizeof(int));
 
   if (id == 0) {
@@ -72,41 +84,83 @@ start_client(int client_id)
   } else {
     puts("You have successfully registered");
   }
+}
+
+void
+send_message(int client_fd,
+             int client_id,
+             struct sockaddr_in* server_addr,
+             socklen_t server_addrlen)
+{
+  char buffer[MAX_LEN];
 
   while (true) {
-    char* action_choice = client_menu();
-    if (strcmp(action_choice, "q") == 0) {
-      free(action_choice);
+    char* message = client_menu();
+
+    memset(buffer, '\0', MAX_LEN);
+    memcpy(buffer, &client_id, sizeof(int));
+    strncpy(buffer + sizeof(int),
+            message,
+            MAX_LEN - sizeof(int) - 1);
+
+    if (sendto(client_fd,
+               buffer,
+               sizeof(int) + strlen(buffer + sizeof(int)),
+               MSG_CONFIRM,
+               (struct sockaddr*)server_addr,
+               server_addrlen) == -1)
+      handle_error("sendto");
+
+    if (strcmp(message, "q") == 0) {
+      free(message);
       puts("\nThe client has successfully shut down");
       break;
     }
 
-    memset(buffer, 0, MAX_LEN);
-    memcpy(buffer, &client_id, sizeof(int));
-    strncpy(buffer + sizeof(int),
-            action_choice,
-            MAX_LEN - sizeof(int) - 1);
-    sendto(client_fd,
-           buffer,
-           sizeof(int) + sizeof(action_choice),
-           MSG_CONFIRM,
-           (struct sockaddr*)&server_addr,
-           server_addrlen);
+    free(message);
+    memset(buffer, '\0', MAX_LEN);
 
-    free(action_choice);
+    output_wrapped_title("Output", 30, '-');
+
+    int n = recvfrom(client_fd,
+                     buffer,
+                     MAX_LEN,
+                     MSG_WAITALL,
+                     (struct sockaddr*)server_addr,
+                     &server_addrlen);
+    if (n == -1)
+      handle_error("recvfrom");
+
+    int id;
+    memcpy(&id, buffer, sizeof(int));
+    printf("User %d: %s\n", id, buffer + sizeof(int));
   }
-  close(client_fd);
 }
 
 int
 main(int argc, char* argv[])
 {
-  if (argc != 2 || !is_unsigned(argv[1]) ||
-      atoi(argv[1]) == 0) {
-    puts("Input the client ID");
+  if (argc != 2) {
+    puts("Usage: ./client <client_id>");
     exit(EXIT_FAILURE);
   }
+
   int client_id = atoi(argv[1]);
-  start_client(client_id);
+  if (client_id <= 0) {
+    puts("Client ID should be a positive integer.");
+    exit(EXIT_FAILURE);
+  }
+
+  int client_fd;
+  struct sockaddr_in server_addr;
+  socklen_t server_addrlen = sizeof(server_addr);
+
+  initialize_client(&client_fd, &server_addr);
+  register_client(
+    client_fd, client_id, &server_addr, server_addrlen);
+  send_message(
+    client_fd, client_id, &server_addr, server_addrlen);
+
+  close(client_fd);
   return 0;
 }
