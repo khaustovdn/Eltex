@@ -1,13 +1,14 @@
 #include <netinet/in.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 #include "../../../utils/utils.h"
 
 #define PORT 8080
-#define LISTEN_BACKLOG 50
+#define MAX_CONNECTIONS 1024
 
 void
 handle_error(const char* msg)
@@ -16,11 +17,12 @@ handle_error(const char* msg)
   exit(EXIT_FAILURE);
 }
 
-int
-main(int argc, char* argv[])
+void
+start_server()
 {
-  struct sockaddr_in server_addr;
-  struct sockaddr_in client_addr;
+  struct sockaddr_in server_addr, client_addr;
+  int connections[MAX_CONNECTIONS] = { 0 };
+  int connections_count = 0;
   char buffer[MAX_LEN];
   int opt = 1;
 
@@ -45,16 +47,57 @@ main(int argc, char* argv[])
     handle_error("bind");
 
   socklen_t client_addrlen = sizeof(client_addr);
-  for (;;) {
+  while (true) {
     int n = recvfrom(server_fd,
                      buffer,
                      MAX_LEN,
                      MSG_WAITALL,
                      (struct sockaddr*)&client_addr,
                      &client_addrlen);
-    buffer[n] = '\0';
-    printf("buffer: %s\n", buffer);
-  }
+    if (n < 0)
+      handle_error("recvfrom");
 
-  return EXIT_SUCCESS;
+    int id = 0;
+    memcpy(&id, buffer, sizeof(int));
+
+    if (n == sizeof(int)) {
+      bool user_exists = false;
+      for (int i = 0; i < connections_count; i++) {
+        if (id == connections[i]) {
+          int response = 0;
+          sendto(server_fd,
+                 &response,
+                 sizeof(response),
+                 MSG_CONFIRM,
+                 (struct sockaddr*)&client_addr,
+                 client_addrlen);
+          printf("User %d already exists\n", id);
+          user_exists = true;
+          break;
+        }
+      }
+      if (!user_exists) {
+        sendto(server_fd,
+               &id,
+               sizeof(id),
+               MSG_CONFIRM,
+               (struct sockaddr*)&client_addr,
+               client_addrlen);
+        connections[connections_count++] = id;
+        printf("User %d has successfully registered\n", id);
+      }
+    } else {
+      buffer[n] = '\0';
+      printf(
+        "User %d - client: %s\n", id, buffer + sizeof(int));
+    }
+  }
+  close(server_fd);
+}
+
+int
+main()
+{
+  start_server();
+  return 0;
 }
