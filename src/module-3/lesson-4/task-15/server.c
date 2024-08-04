@@ -31,11 +31,20 @@ void
 initialize_server(int* sock_fd,
                   struct sockaddr_in* server_addr)
 {
+  int opt = 1;
+
   *sock_fd = socket(AF_INET, SOCK_STREAM, 0);
   if (*sock_fd == -1)
     handle_error("socket");
   else
     puts("Socket successfully created..");
+
+  if (setsockopt(*sock_fd,
+                 SOL_SOCKET,
+                 SO_REUSEADDR | SO_REUSEPORT,
+                 &opt,
+                 sizeof(opt)) == -1)
+    handle_error("setsockopt");
 
   bzero(server_addr, sizeof(*server_addr));
 
@@ -96,9 +105,8 @@ handle_message(Client client, char* buffer, int n)
 }
 
 void
-handle_client(int conn_fd)
+handle_calculator(int conn_fd)
 {
-  Client client;
   char buffer[MAX_LEN];
 
   CommandEntry commands[] = { { "+", add },
@@ -106,7 +114,106 @@ handle_client(int conn_fd)
                               { "*", multiply },
                               { "/", divide },
                               { NULL, NULL } };
+  double x, y, result = 0;
 
+  strncpy(buffer + sizeof(int),
+          "Choose an action:\n\t+) Addition\n\t-) "
+          "Subtraction\n\t"
+          "*) Multiplication\n\t/) Division",
+          MAX_LEN - sizeof(int) - 1);
+  buffer[MAX_LEN - 1] = '\0';
+  if (send(conn_fd, buffer, sizeof(buffer), 0) == -1) {
+    close(conn_fd);
+    return;
+  }
+
+  bzero(buffer, MAX_LEN);
+  int n = recv(conn_fd, buffer, sizeof(buffer), 0);
+  if (n == -1) {
+    close(conn_fd);
+    return;
+  } else if (n != 5) {
+    return;
+  }
+
+  int i = 0;
+  for (; commands[i].name != NULL; i++)
+    if (strncmp(commands[i].name,
+                buffer + sizeof(int),
+                MAX_LEN) == 0) {
+      strncpy(buffer + sizeof(int),
+              "Input x",
+              MAX_LEN - sizeof(int) - 1);
+      buffer[MAX_LEN - 1] = '\0';
+      if (send(conn_fd, buffer, sizeof(buffer), 0) == -1) {
+        close(conn_fd);
+        return;
+      }
+
+      bzero(buffer, MAX_LEN);
+      n = recv(conn_fd, buffer, sizeof(buffer), 0);
+      if (n == -1) {
+        close(conn_fd);
+        return;
+      }
+
+      if (is_integer(buffer + sizeof(int)) == false)
+        break;
+      x = atof(buffer + sizeof(int));
+
+      strncpy(buffer + sizeof(int),
+              "Input y",
+              MAX_LEN - sizeof(int) - 1);
+      buffer[MAX_LEN - 1] = '\0';
+      if (send(conn_fd, buffer, sizeof(buffer), 0) == -1) {
+        close(conn_fd);
+        return;
+      }
+
+      bzero(buffer, MAX_LEN);
+      n = recv(conn_fd, buffer, sizeof(buffer), 0);
+      if (n == -1) {
+        close(conn_fd);
+        return;
+      }
+
+      if (is_integer(buffer + sizeof(int)) == false)
+        continue;
+      y = atof(buffer + sizeof(int));
+
+      result = ((operation)commands[i].property)(x, y);
+
+      printf("Result: %lf\n", result);
+      break;
+    }
+  if (commands[i].name == NULL) {
+    strncpy(buffer + sizeof(int),
+            "Invalid action",
+            MAX_LEN - sizeof(int) - 1);
+    buffer[MAX_LEN - 1] = '\0';
+    if (send(conn_fd, buffer, sizeof(buffer), 0) == -1) {
+      close(conn_fd);
+      return;
+    }
+    return;
+  }
+
+  snprintf(buffer + sizeof(int),
+           MAX_LEN - sizeof(int) - 1,
+           "Result: %lf",
+           result);
+  buffer[MAX_LEN - 1] = '\0';
+  if (send(conn_fd, buffer, sizeof(buffer), 0) == -1) {
+    close(conn_fd);
+    return;
+  }
+}
+
+void
+handle_client(int conn_fd)
+{
+  Client client;
+  char buffer[MAX_LEN];
   for (;;) {
     bzero(buffer, MAX_LEN);
     int n = recv(conn_fd, buffer, sizeof(buffer), 0);
@@ -118,104 +225,9 @@ handle_client(int conn_fd)
     if (n == sizeof(int)) {
       handle_registration(conn_fd, &client, buffer);
     } else if (strncmp(buffer + sizeof(int),
-                       "start",
+                       "calculator",
                        sizeof(buffer)) == 0) {
-      double x, y, result = 0;
-
-      strncpy(buffer + sizeof(int),
-              "Choose an action:\n\t+) Addition\n\t-) "
-              "Subtraction\n\t"
-              "*) Multiplication\n\t/) Division",
-              MAX_LEN - sizeof(int) - 1);
-      buffer[MAX_LEN - 1] = '\0';
-      if (send(conn_fd, buffer, sizeof(buffer), 0) == -1) {
-        close(conn_fd);
-        return;
-      }
-
-      bzero(buffer, MAX_LEN);
-      int n = recv(conn_fd, buffer, sizeof(buffer), 0);
-      if (n == -1) {
-        close(conn_fd);
-        return;
-      } else if (n != 5) {
-        break;
-      }
-
-      int i = 0;
-      for (; commands[i].name != NULL; i++)
-        if (strncmp(commands[i].name,
-                    buffer + sizeof(int),
-                    MAX_LEN) == 0) {
-          strncpy(buffer + sizeof(int),
-                  "Input x",
-                  MAX_LEN - sizeof(int) - 1);
-          buffer[MAX_LEN - 1] = '\0';
-          if (send(conn_fd, buffer, sizeof(buffer), 0) ==
-              -1) {
-            close(conn_fd);
-            return;
-          }
-
-          bzero(buffer, MAX_LEN);
-          n = recv(conn_fd, buffer, sizeof(buffer), 0);
-          if (n == -1) {
-            close(conn_fd);
-            return;
-          }
-
-          if (is_integer(buffer + sizeof(int)) == false)
-            break;
-          x = atof(buffer + sizeof(int));
-
-          strncpy(buffer + sizeof(int),
-                  "Input y",
-                  MAX_LEN - sizeof(int) - 1);
-          buffer[MAX_LEN - 1] = '\0';
-          if (send(conn_fd, buffer, sizeof(buffer), 0) ==
-              -1) {
-            close(conn_fd);
-            return;
-          }
-
-          bzero(buffer, MAX_LEN);
-          n = recv(conn_fd, buffer, sizeof(buffer), 0);
-          if (n == -1) {
-            close(conn_fd);
-            return;
-          }
-
-          if (is_integer(buffer + sizeof(int)) == false)
-            continue;
-          y = atof(buffer + sizeof(int));
-
-          result = ((operation)commands[i].property)(x, y);
-
-          printf("Result: %lf\n", result);
-          break;
-        }
-      if (commands[i].name == NULL) {
-        strncpy(buffer + sizeof(int),
-                "Invalid action",
-                MAX_LEN - sizeof(int) - 1);
-        buffer[MAX_LEN - 1] = '\0';
-        if (send(conn_fd, buffer, sizeof(buffer), 0) ==
-            -1) {
-          close(conn_fd);
-          return;
-        }
-        continue;
-      }
-
-      snprintf(buffer + sizeof(int),
-               MAX_LEN - sizeof(int) - 1,
-               "Result: %lf",
-               result);
-      buffer[MAX_LEN - 1] = '\0';
-      if (send(conn_fd, buffer, sizeof(buffer), 0) == -1) {
-        close(conn_fd);
-        return;
-      }
+      handle_calculator(conn_fd);
     } else {
       if (handle_message(client, buffer, n) == -1) {
         close(client.fd);
