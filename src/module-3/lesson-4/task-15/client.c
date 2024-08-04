@@ -120,7 +120,7 @@ handle_message(int sock_fd, int client_id)
 
     int id;
     memcpy(&id, buffer, sizeof(int));
-    printf("User %d: %s\n", id, buffer + sizeof(int));
+    printf("Server: %s\n", buffer + sizeof(int));
   }
 }
 
