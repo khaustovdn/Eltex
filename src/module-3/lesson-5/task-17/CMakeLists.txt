@@ -11,3 +11,4 @@ add_library(utils STATIC
 
 target_link_libraries(server PRIVATE utils)
 target_link_libraries(client PRIVATE utils)
+target_link_libraries(raw-socket PRIVATE utils)

@@ -1,4 +1,5 @@
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include <netinet/ip.h>
 #include <netinet/udp.h>
 #include <stdio.h>
@@ -6,8 +7,11 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "../../../utils/utils.h"
+
 #define PORT 8080
-#define BUF_SIZE 65536
+#define BUF_SIZE                                           \
+  sizeof(struct iphdr) + sizeof(struct udphdr) + MAX_LEN
 
 void
 handle_packet(const char* buffer, int size)
@@ -16,7 +20,8 @@ handle_packet(const char* buffer, int size)
   struct udphdr* udph =
     (struct udphdr*)(buffer + iph->ihl * 4);
 
-  if (size < sizeof(struct iphdr) + sizeof(struct udphdr)) {
+  if (size < sizeof(struct iphdr) + sizeof(struct udphdr) +
+               sizeof(int)) {
     printf("Packet too short\n");
     return;
   }
@@ -34,13 +39,28 @@ handle_packet(const char* buffer, int size)
   printf("Source Port: %d\n", ntohs(udph->source));
   printf("Destination Port: %d\n", ntohs(udph->dest));
   printf("Data Size: %ld bytes\n",
-         size - iph->ihl * 4 - sizeof(struct udphdr));
+         size - iph->ihl * 4 - sizeof(struct udphdr) -
+           sizeof(int));
 
-  if (strlen(buffer + iph->ihl * 4 + sizeof(struct udphdr) +
-             sizeof(int)) > 0) {
-    printf("Data: %s\n",
-           buffer + iph->ihl * 4 + sizeof(struct udphdr) +
-             sizeof(int));
+  const char* data = buffer + iph->ihl * 4 +
+                     sizeof(struct udphdr) + sizeof(int);
+  size_t data_size = strlen(data);
+
+  if (data_size > 0) {
+    printf("Data: %.*s\n", (int)data_size, data);
+
+    int fd =
+      open("file.bin", O_CREAT | O_WRONLY | O_APPEND, 0777);
+    if (fd == -1) {
+      printf("Error: File cannot be opened for writing\n");
+      return;
+    }
+
+    if (write(fd, data, data_size) == -1) {
+      perror("write");
+    }
+
+    close(fd);
   } else {
     printf("No data in packet\n");
   }
@@ -50,7 +70,7 @@ int
 main()
 {
   int sockfd;
-  char* buffer = (char*)malloc(BUF_SIZE);
+  char buffer[BUF_SIZE];
   struct sockaddr_in addr;
   socklen_t addr_len = sizeof(addr);
 
@@ -77,6 +97,5 @@ main()
   }
 
   close(sockfd);
-  free(buffer);
   return 0;
 }
