@@ -21,3 +21,6 @@
      - [X] task 14
      - [X] task 15
      - [X] task 16
+   - ### Lesson 5
+     - [X] task 17
+     - [X] task 18
