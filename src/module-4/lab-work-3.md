@@ -2,7 +2,7 @@
 
 - ## Настройка на коммутаторах протокола LACP агрегирования каналов технологии EtherChannel
 
-  - ### LW-SW-1
+  - ### L2-SW-1
 
   ```
   L2-SW-1(config)#int range g0/0-1
@@ -79,7 +79,7 @@
   Po1                 Desg FWD 3         128.68   Shr
   ```
 
-  - ### LW-SW-2
+  - ### L2-SW-2
 
   ```
   L2-SW-2(config)#int range g0/0-2
@@ -162,7 +162,7 @@
   Po7                 Altn BLK 3         128.68   Shr
   ```
 
-  - ### LW-SW-3
+  - ### L2-SW-3
 
   ```
   L2-SW-3(config)#int range g0/0-1
@@ -215,7 +215,7 @@
   Po1                 Root FWD 3         128.66   Shr
   ```
 
-  - ### LW-SW-4
+  - ### L2-SW-4
 
   ```
   L2-SW-4(config)#int range g0/0-1
@@ -268,7 +268,7 @@
   Po2                 Root FWD 3         128.66   Shr
   ```
 
-  - ### LW-SW-5
+  - ### L2-SW-5
 
   ```
   L2-SW-5(config)#int range g0/0-1
