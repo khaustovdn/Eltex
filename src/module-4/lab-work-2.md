@@ -2,7 +2,7 @@
 
 - ## Настройка протокола STP
 
-  - ### LW-SW-1
+  - ### L2-SW-1
 
   ```
   L2-SW-1(config)#spanning-tree vlan 1 root primary
@@ -15,7 +15,7 @@
              Aging Time  300 sec
   ```
 
-  - ### LW-SW-2
+  - ### L2-SW-2
 
   ```
   L2-SW-2(config)#spanning-tree vlan 1 root secondary
@@ -229,86 +229,84 @@
 
   - ### Изначальная схема с базовой конфигурацией L2-SW-4
 
-    ```
-    L2-SW-4#show spanning-tree
+  ```
+  L2-SW-4#show spanning-tree
 
-    VLAN0001
+  VLAN0001
     Spanning tree enabled protocol ieee
-        Root ID    Priority    24577
+    Root ID    Priority    24577
              Address     0c71.d551.0000
              Cost        4
              Port        1 (GigabitEthernet0/0)
              Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
 
-        Bridge ID  Priority    32769  (priority 32768 sys-id-ext 1)
+    Bridge ID  Priority    32769  (priority 32768 sys-id-ext 1)
              Address     0c51.c113.0000
              Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
              Aging Time  15  sec
 
-    Interface           Role Sts Cost      Prio.Nbr Type
-    ------------------- ---- --- --------- -------- --------------------------------
-    Gi0/0               Root FWD 4         128.1    Shr
-    Gi0/1               Altn BLK 4         128.2    Shr
-    Gi0/2               Altn BLK 4         128.3    Shr
-    Gi0/3               Altn BLK 4         128.4    Shr
-    Gi1/0               Desg FWD 4         128.5    Shr
-    Gi1/1               Desg FWD 4         128.6    Shr
-    ```
+  Interface           Role Sts Cost      Prio.Nbr Type
+  ------------------- ---- --- --------- -------- --------------------------------
+  Gi0/0               Root FWD 4         128.1    Shr
+  Gi0/1               Altn BLK 4         128.2    Shr
+  Gi0/2               Altn BLK 4         128.3    Shr
+  Gi0/3               Altn BLK 4         128.4    Shr
+  Gi1/0               Desg FWD 4         128.5    Shr
+  Gi1/1               Desg FWD 4         128.6    Shr
+  ```
 
   ![2](https://github.com/user-attachments/assets/46741269-5843-4aec-9fa9-92b77747370f)
 
   - ### Конфигурация L2-SW-4
 
-    ```
-    # После изменений маршрут потока изменится с L2-SW-4 -> LW-SW-1 на L2-SW-4 -> L2-SW-2 -> LW-SW-1
-    L2-SW-4#conf t
-    L2-SW-4(config)#int Gi0/0
-    L2-SW-4(config-if)#span vlan 1 cost 24
-    L2-SW-4(config-if)#no shut
-    L2-SW-4(config-if)#exit
-    L2-SW-4(config)#int Gi0/1
-    L2-SW-4(config-if)#span vlan 1 cost 24
-    L2-SW-4(config-if)#no shut
-    L2-SW-4(config-if)#exit
-    ```
+  ```
+  # После изменений маршрут потока изменится с L2-SW-4 -> L2-SW-1 на L2-SW-4 -> L2-SW-2 -> L2-SW-1
+  L2-SW-4#conf t
+  L2-SW-4(config)#int Gi0/0
+  L2-SW-4(config-if)#span vlan 1 cost 24
+  L2-SW-4(config-if)#no shut
+  L2-SW-4(config-if)#exit
+  L2-SW-4(config)#int Gi0/1
+  L2-SW-4(config-if)#span vlan 1 cost 24
+  L2-SW-4(config-if)#no shut
+  L2-SW-4(config-if)#exit
+  ```
 
   - ### Вывод измененной схемы
 
-    ```
-    L2-SW-4#show spanning-tree
+  ```
+  L2-SW-4#show spanning-tree
 
-    VLAN0001
+  VLAN0001
     Spanning tree enabled protocol ieee
-        Root ID    Priority    24577
+    Root ID    Priority    24577
              Address     0c71.d551.0000
              Cost        8
              Port        3 (GigabitEthernet0/2)
              Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
 
-        Bridge ID  Priority    32769  (priority 32768 sys-id-ext 1)
+    Bridge ID  Priority    32769  (priority 32768 sys-id-ext 1)
              Address     0c51.c113.0000
              Hello Time   2 sec  Max Age 20 sec  Forward Delay 15 sec
              Aging Time  15  sec
 
-    Interface           Role Sts Cost      Prio.Nbr Type
-    ------------------- ---- --- --------- -------- --------------------------------
-    Gi0/0               Altn BLK 24        128.1    Shr
-    Gi0/1               Altn BLK 24        128.2    Shr
-    Gi0/2               Root LIS 4         128.3    Shr
-    Gi0/3               Altn BLK 4         128.4    Shr
-    Gi1/0               Desg FWD 4         128.5    Shr
-    Gi1/1               Desg FWD 4         128.6    Shr
-    ```
+  Interface           Role Sts Cost      Prio.Nbr Type
+  ------------------- ---- --- --------- -------- --------------------------------
+  Gi0/0               Altn BLK 24        128.1    Shr
+  Gi0/1               Altn BLK 24        128.2    Shr
+  Gi0/2               Root LIS 4         128.3    Shr
+  Gi0/3               Altn BLK 4         128.4    Shr
+  Gi1/0               Desg FWD 4         128.5    Shr
+  Gi1/1               Desg FWD 4         128.6    Shr
+  ```
 
   ![3](https://github.com/user-attachments/assets/d3589c06-93a2-4727-a176-47bc6eb54993)
 
 - ## Show Running Command Outputs
 
-  - ### LW-SW-1
+  - ### L2-SW-1
 
   ```
-    Building configuration...
-
     Current configuration : 5209 bytes
     !
     ! Last configuration change at 15:48:07 UTC Thu Aug 15 2024
@@ -347,43 +345,43 @@
     vlan internal allocation policy ascending
     !
     vlan 100
-    name VLAN100
+      name VLAN100
     !
     vlan 200,300
     !
     !
     !
     interface GigabitEthernet0/0
-    media-type rj45
-    negotiation auto
+      media-type rj45
+      negotiation auto
     !
     interface GigabitEthernet0/1
-     media-type rj45
-    negotiation auto
+      media-type rj45
+      negotiation auto
     !
     interface GigabitEthernet0/2
-    media-type rj45
-    negotiation auto
+      media-type rj45
+      negotiation auto
     !
     interface GigabitEthernet0/3
-    media-type rj45
-    negotiation auto
+      media-type rj45
+      negotiation auto
     !
     interface GigabitEthernet1/0
-    media-type rj45
-    negotiation auto
+      media-type rj45
+      negotiation auto
     !
     interface GigabitEthernet1/1
-    media-type rj45
-    negotiation auto
+      media-type rj45
+      negotiation auto
     !
     interface GigabitEthernet1/2
-    media-type rj45
-    negotiation auto
+      media-type rj45
+      negotiation auto
     !
     interface GigabitEthernet1/3
-    media-type rj45
-    negotiation auto
+      media-type rj45
+      negotiation auto
     !
     ip forward-protocol nd
     !
@@ -401,11 +399,9 @@
     end
   ```
 
-  - ### LW-SW-2
+  - ### L2-SW-2
 
   ```
-    Building configuration...
-
     Current configuration : 5209 bytes
     !
     ! Last configuration change at 15:48:54 UTC Thu Aug 15 2024
@@ -444,43 +440,43 @@
     vlan internal allocation policy ascending
     !
     vlan 100
-    name VLAN100
+      name VLAN100
     !
     vlan 200,300
     !
     !
     !
     interface GigabitEthernet0/0
-    media-type rj45
-    negotiation auto
+      media-type rj45
+      negotiation auto
     !
     interface GigabitEthernet0/1
-    media-type rj45
-    negotiation auto
+      media-type rj45
+      negotiation auto
     !
     interface GigabitEthernet0/2
-    media-type rj45
-    negotiation auto
+      media-type rj45
+      negotiation auto
     !
     interface GigabitEthernet0/3
-    media-type rj45
-    negotiation auto
+      media-type rj45
+      negotiation auto
     !
     interface GigabitEthernet1/0
-    media-type rj45
-    negotiation auto
+      media-type rj45
+      negotiation auto
     !
     interface GigabitEthernet1/1
-    media-type rj45
-    negotiation auto
+      media-type rj45
+      negotiation auto
     !
     interface GigabitEthernet1/2
-    media-type rj45
-    negotiation auto
+      media-type rj45
+      negotiation auto
     !
     interface GigabitEthernet1/3
-    media-type rj45
-    negotiation auto
+      media-type rj45
+      negotiation auto
     !
     ip forward-protocol nd
     !
